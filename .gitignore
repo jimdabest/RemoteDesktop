@@ -1,0 +1,9 @@
+# Thư mục build của dự án
+bin/
+obj/
+
+# Thư mục tạm và file cấu hình cá nhân của Visual Studio
+.vs/
+*.user
+*.suo
+*.db
