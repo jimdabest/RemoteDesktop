@@ -110,6 +110,7 @@
             this.PtbScreenView.Location = new System.Drawing.Point(0, 0);
             this.PtbScreenView.Name = "PtbScreenView";
             this.PtbScreenView.Size = new System.Drawing.Size(800, 394);
+            this.PtbScreenView.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.PtbScreenView.TabIndex = 0;
             this.PtbScreenView.TabStop = false;
             // 
