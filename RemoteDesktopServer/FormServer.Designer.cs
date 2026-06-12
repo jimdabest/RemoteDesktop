@@ -1,6 +1,6 @@
 ﻿namespace RemoteDesktopServer
 {
-    partial class Form1
+    partial class FormServer
     {
         /// <summary>
         /// Required designer variable.
@@ -67,7 +67,7 @@
             this.labelIp.AutoSize = true;
             this.labelIp.Location = new System.Drawing.Point(12, 12);
             this.labelIp.Name = "labelIp";
-            this.labelIp.Size = new System.Drawing.Size(20, 17);
+            this.labelIp.Size = new System.Drawing.Size(19, 16);
             this.labelIp.TabIndex = 0;
             this.labelIp.Text = "IP";
             // 
@@ -84,7 +84,7 @@
             this.labelPort.AutoSize = true;
             this.labelPort.Location = new System.Drawing.Point(180, 12);
             this.labelPort.Name = "labelPort";
-            this.labelPort.Size = new System.Drawing.Size(34, 17);
+            this.labelPort.Size = new System.Drawing.Size(31, 16);
             this.labelPort.TabIndex = 2;
             this.labelPort.Text = "Port";
             // 
@@ -108,13 +108,13 @@
             // 
             // btnStop
             // 
+            this.btnStop.Enabled = false;
             this.btnStop.Location = new System.Drawing.Point(370, 28);
             this.btnStop.Name = "btnStop";
             this.btnStop.Size = new System.Drawing.Size(65, 30);
             this.btnStop.TabIndex = 5;
             this.btnStop.Text = "Stop";
             this.btnStop.UseVisualStyleBackColor = true;
-            this.btnStop.Enabled = false;
             this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
             // 
             // labelClients
@@ -122,7 +122,7 @@
             this.labelClients.AutoSize = true;
             this.labelClients.Location = new System.Drawing.Point(12, 70);
             this.labelClients.Name = "labelClients";
-            this.labelClients.Size = new System.Drawing.Size(51, 17);
+            this.labelClients.Size = new System.Drawing.Size(47, 16);
             this.labelClients.TabIndex = 6;
             this.labelClients.Text = "Clients";
             // 
@@ -150,7 +150,7 @@
             this.labelLog.AutoSize = true;
             this.labelLog.Location = new System.Drawing.Point(12, 270);
             this.labelLog.Name = "labelLog";
-            this.labelLog.Size = new System.Drawing.Size(33, 17);
+            this.labelLog.Size = new System.Drawing.Size(30, 16);
             this.labelLog.TabIndex = 9;
             this.labelLog.Text = "Log";
             // 
@@ -164,13 +164,13 @@
             this.txtLog.Size = new System.Drawing.Size(776, 148);
             this.txtLog.TabIndex = 10;
             // 
-            // Form1
+            // FormServer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.panelLeft);
-            this.Name = "Form1";
+            this.Name = "FormServer";
             this.Text = "Remote Desktop Server";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.panelLeft.ResumeLayout(false);
