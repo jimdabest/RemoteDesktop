@@ -1,5 +1,5 @@
 <Solution>
   <Project Path="RemoteDesktopClient/RemoteDesktopClient.csproj" Id="0c1e52d1-649c-4809-a97d-e40db0795c6a" />
-  <Project Path="RemoteDesktopServer/RemoteDesktopServer.csproj" Id="088d2540-cfd0-4a34-898c-ea5bc6b23a03" />
+  <Project Path="RemoteDesktopServer/RemoteDesktopServer.csproj" Id="2f271cb4-1347-4e13-96e4-2b5bcbdf7370" />
   <Project Path="RemoteDesktopShared/RemoteDesktopShared.csproj" Id="d9d4cdb5-9fd0-4cc4-9d4d-f761f6df3dc0" />
 </Solution>
