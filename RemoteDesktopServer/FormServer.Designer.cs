@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.panelHeader = new System.Windows.Forms.Panel();
             this.lblTitle = new System.Windows.Forms.Label();
             this.panelControl = new System.Windows.Forms.Panel();
@@ -49,8 +48,8 @@
             this.colConnectedTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.colStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.tabLogs = new System.Windows.Forms.TabPage();
-            this.txtLogs = new System.Windows.Forms.TextBox();
             this.btnClearLogs = new System.Windows.Forms.Button();
+            this.txtLogs = new System.Windows.Forms.TextBox();
             this.panelHeader.SuspendLayout();
             this.panelControl.SuspendLayout();
             this.panelStatus.SuspendLayout();
@@ -76,7 +75,7 @@
             this.lblTitle.ForeColor = System.Drawing.Color.White;
             this.lblTitle.Location = new System.Drawing.Point(20, 15);
             this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(230, 32);
+            this.lblTitle.Size = new System.Drawing.Size(404, 40);
             this.lblTitle.TabIndex = 0;
             this.lblTitle.Text = "Remote Desktop Server";
             // 
@@ -92,6 +91,7 @@
             this.panelControl.Name = "panelControl";
             this.panelControl.Size = new System.Drawing.Size(900, 80);
             this.panelControl.TabIndex = 1;
+            this.panelControl.Paint += new System.Windows.Forms.PaintEventHandler(this.panelControl_Paint);
             // 
             // btnStop
             // 
@@ -126,7 +126,7 @@
             this.lblPort.Font = new System.Drawing.Font("Arial", 10F);
             this.lblPort.Location = new System.Drawing.Point(320, 15);
             this.lblPort.Name = "lblPort";
-            this.lblPort.Size = new System.Drawing.Size(39, 16);
+            this.lblPort.Size = new System.Drawing.Size(44, 19);
             this.lblPort.TabIndex = 1;
             this.lblPort.Text = "Port:";
             // 
@@ -135,7 +135,7 @@
             this.txtPort.Font = new System.Drawing.Font("Arial", 10F);
             this.txtPort.Location = new System.Drawing.Point(365, 12);
             this.txtPort.Name = "txtPort";
-            this.txtPort.Size = new System.Drawing.Size(100, 23);
+            this.txtPort.Size = new System.Drawing.Size(100, 27);
             this.txtPort.TabIndex = 0;
             this.txtPort.Text = "5000";
             // 
@@ -159,7 +159,7 @@
             this.lblStatusValue.ForeColor = System.Drawing.Color.Red;
             this.lblStatusValue.Location = new System.Drawing.Point(90, 15);
             this.lblStatusValue.Name = "lblStatusValue";
-            this.lblStatusValue.Size = new System.Drawing.Size(69, 16);
+            this.lblStatusValue.Size = new System.Drawing.Size(59, 19);
             this.lblStatusValue.TabIndex = 3;
             this.lblStatusValue.Text = "Offline";
             // 
@@ -169,7 +169,7 @@
             this.lblStatus.Font = new System.Drawing.Font("Arial", 10F);
             this.lblStatus.Location = new System.Drawing.Point(20, 15);
             this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(64, 16);
+            this.lblStatus.Size = new System.Drawing.Size(59, 19);
             this.lblStatus.TabIndex = 2;
             this.lblStatus.Text = "Status:";
             // 
@@ -179,7 +179,7 @@
             this.lblConnectedClientsValue.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold);
             this.lblConnectedClientsValue.Location = new System.Drawing.Point(460, 15);
             this.lblConnectedClientsValue.Name = "lblConnectedClientsValue";
-            this.lblConnectedClientsValue.Size = new System.Drawing.Size(14, 16);
+            this.lblConnectedClientsValue.Size = new System.Drawing.Size(18, 19);
             this.lblConnectedClientsValue.TabIndex = 1;
             this.lblConnectedClientsValue.Text = "0";
             // 
@@ -189,7 +189,7 @@
             this.lblConnectedClients.Font = new System.Drawing.Font("Arial", 10F);
             this.lblConnectedClients.Location = new System.Drawing.Point(320, 15);
             this.lblConnectedClients.Name = "lblConnectedClients";
-            this.lblConnectedClients.Size = new System.Drawing.Size(134, 16);
+            this.lblConnectedClients.Size = new System.Drawing.Size(147, 19);
             this.lblConnectedClients.TabIndex = 0;
             this.lblConnectedClients.Text = "Connected Clients:";
             // 
@@ -207,10 +207,10 @@
             // tabClients
             // 
             this.tabClients.Controls.Add(this.lvClients);
-            this.tabClients.Location = new System.Drawing.Point(4, 22);
+            this.tabClients.Location = new System.Drawing.Point(4, 26);
             this.tabClients.Name = "tabClients";
             this.tabClients.Padding = new System.Windows.Forms.Padding(3);
-            this.tabClients.Size = new System.Drawing.Size(892, 334);
+            this.tabClients.Size = new System.Drawing.Size(892, 330);
             this.tabClients.TabIndex = 0;
             this.tabClients.Text = "Connected Clients";
             this.tabClients.UseVisualStyleBackColor = true;
@@ -225,9 +225,10 @@
             this.lvClients.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvClients.FullRowSelect = true;
             this.lvClients.GridLines = true;
+            this.lvClients.HideSelection = false;
             this.lvClients.Location = new System.Drawing.Point(3, 3);
             this.lvClients.Name = "lvClients";
-            this.lvClients.Size = new System.Drawing.Size(886, 328);
+            this.lvClients.Size = new System.Drawing.Size(886, 324);
             this.lvClients.TabIndex = 0;
             this.lvClients.UseCompatibleStateImageBehavior = false;
             this.lvClients.View = System.Windows.Forms.View.Details;
@@ -256,10 +257,10 @@
             // 
             this.tabLogs.Controls.Add(this.btnClearLogs);
             this.tabLogs.Controls.Add(this.txtLogs);
-            this.tabLogs.Location = new System.Drawing.Point(4, 22);
+            this.tabLogs.Location = new System.Drawing.Point(4, 26);
             this.tabLogs.Name = "tabLogs";
             this.tabLogs.Padding = new System.Windows.Forms.Padding(3);
-            this.tabLogs.Size = new System.Drawing.Size(892, 334);
+            this.tabLogs.Size = new System.Drawing.Size(892, 330);
             this.tabLogs.TabIndex = 1;
             this.tabLogs.Text = "Server Logs";
             this.tabLogs.UseVisualStyleBackColor = true;
@@ -277,8 +278,8 @@
             // 
             // txtLogs
             // 
-            this.txtLogs.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.txtLogs.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtLogs.BackColor = System.Drawing.Color.Black;
             this.txtLogs.Font = new System.Drawing.Font("Courier New", 9F);
@@ -291,9 +292,9 @@
             this.txtLogs.Size = new System.Drawing.Size(886, 298);
             this.txtLogs.TabIndex = 0;
             // 
-            // Form1
+            // FormServer
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(900, 550);
             this.Controls.Add(this.tabControl);
@@ -303,7 +304,7 @@
             this.Font = new System.Drawing.Font("Arial", 9F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
-            this.Name = "Form1";
+            this.Name = "FormServer";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Remote Desktop Server";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
@@ -318,6 +319,7 @@
             this.tabLogs.ResumeLayout(false);
             this.tabLogs.PerformLayout();
             this.ResumeLayout(false);
+
         }
 
         #endregion

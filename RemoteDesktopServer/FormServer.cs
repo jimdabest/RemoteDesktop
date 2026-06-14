@@ -15,7 +15,7 @@ namespace RemoteDesktopServer
 {
     public partial class FormServer : Form
     {
-        private TcpListener tcpListener;
+        private Socket serverSocket;
         private bool isServerRunning = false;
         private Thread listenerThread;
         private List<ClientConnection> connectedClients = new List<ClientConnection>();
@@ -35,8 +35,10 @@ namespace RemoteDesktopServer
 
             try
             {
-                tcpListener = new TcpListener(IPAddress.Any, port);
-                tcpListener.Start();
+                serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                serverSocket.Bind(new IPEndPoint(IPAddress.Any, port));
+                serverSocket.Listen(100);
+
                 isServerRunning = true;
 
                 btnStart.Enabled = false;
@@ -65,7 +67,15 @@ namespace RemoteDesktopServer
             try
             {
                 isServerRunning = false;
-                tcpListener?.Stop();
+                serverSocket?.Close();
+
+                foreach (var client in connectedClients.ToArray())
+                {
+                    client.ClientSocket?.Shutdown(SocketShutdown.Both);
+                    client.ClientSocket?.Close();
+                }
+
+                connectedClients.Clear();
 
                 btnStart.Enabled = true;
                 btnStop.Enabled = false;
@@ -88,13 +98,15 @@ namespace RemoteDesktopServer
             {
                 try
                 {
-                    TcpClient client = tcpListener.AcceptTcpClient();
-                    string clientIP = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
-                    int clientPort = ((IPEndPoint)client.Client.RemoteEndPoint).Port;
+                    Socket clientSocket = serverSocket.Accept();
+                    IPEndPoint remoteIpEndPoint = (IPEndPoint)clientSocket.RemoteEndPoint;
+
+                    string clientIP = remoteIpEndPoint.Address.ToString();
+                    int clientPort = remoteIpEndPoint.Port;
 
                     ClientConnection connection = new ClientConnection
                     {
-                        Client = client,
+                        ClientSocket = clientSocket,
                         IP = clientIP,
                         Port = clientPort,
                         ConnectedTime = DateTime.Now
@@ -104,6 +116,10 @@ namespace RemoteDesktopServer
                     AppendLog($"[{DateTime.Now:HH:mm:ss}] Client connected: {clientIP}:{clientPort}");
 
                     UpdateClientListUI();
+
+                    connection.Caster = new ScreenCaster(clientIP, 5001);
+                    connection.Caster.StartStreaming();
+                    AppendLog($"[{DateTime.Now:HH:mm:ss}] Started ScreenCaster (UDP: 5001) for {clientIP}");
 
                     // Start a thread to handle this client
                     Thread clientThread = new Thread(() => HandleClient(connection)) { IsBackground = true };
@@ -125,20 +141,24 @@ namespace RemoteDesktopServer
         {
             try
             {
-                NetworkStream stream = connection.Client.GetStream();
                 byte[] buffer = new byte[1024];
 
-                while (isServerRunning && connection.Client.Connected)
+                while (isServerRunning && connection.ClientSocket.Connected)
                 {
-                    int bytesRead = stream.Read(buffer, 0, buffer.Length);
+                    // Nhận dữ liệu trực tiếp từ Socket
+                    int bytesRead = connection.ClientSocket.Receive(buffer);
                     if (bytesRead == 0)
                     {
-                        break;
+                        break; // Client ngắt kết nối
                     }
 
-                    // Handle received data here
+                    // Xử lý gói tin nhận được (ví dụ: CommandPacket) ở đây
                     AppendLog($"[{DateTime.Now:HH:mm:ss}] Data received from {connection.IP}: {bytesRead} bytes");
                 }
+            }
+            catch (SocketException)
+            {
+                // Bỏ qua lỗi ngắt kết nối đột ngột
             }
             catch (Exception ex)
             {
@@ -146,7 +166,9 @@ namespace RemoteDesktopServer
             }
             finally
             {
-                connection.Client?.Close();
+                connection.Caster?.StopStreaming();
+                try { connection.ClientSocket?.Shutdown(SocketShutdown.Both); } catch { }
+                connection.ClientSocket?.Close();
                 connectedClients.Remove(connection);
                 AppendLog($"[{DateTime.Now:HH:mm:ss}] Client disconnected: {connection.IP}:{connection.Port}");
                 UpdateClientListUI();
@@ -209,13 +231,19 @@ namespace RemoteDesktopServer
                 btnStop_Click(null, null);
             }
         }
+
+        private void panelControl_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
     }
 
     public class ClientConnection
     {
-        public TcpClient Client { get; set; }
+        public Socket ClientSocket { get; set; } 
         public string IP { get; set; }
         public int Port { get; set; }
         public DateTime ConnectedTime { get; set; }
+        public ScreenCaster Caster { get; set; }
     }
 }

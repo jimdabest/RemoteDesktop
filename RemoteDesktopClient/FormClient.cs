@@ -5,11 +5,11 @@ namespace RemoteDesktopClient;
 
 public partial class FormClient : Form
 {
-    private TcpClient? tcpClient;
-    private NetworkStream? networkStream;
+    private Socket clientSocket;
     private bool isConnected = false;
     private Thread? receiveThread;
     private Stopwatch latencyStopwatch = new();
+    private ScreenReceiver screenReceiver;
 
     public FormClient()
     {
@@ -34,9 +34,11 @@ public partial class FormClient : Form
 
         try
         {
-            tcpClient = new TcpClient();
+            clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             latencyStopwatch.Restart();
-            tcpClient.BeginConnect(serverIP, port, ConnectCallback, tcpClient);
+
+            // Kết nối bất đồng bộ
+            clientSocket.BeginConnect(serverIP, port, ConnectCallback, clientSocket);
         }
         catch (Exception ex)
         {
@@ -48,13 +50,12 @@ public partial class FormClient : Form
     {
         try
         {
-            tcpClient?.EndConnect(result);
+            clientSocket?.EndConnect(result);
 
-            if (tcpClient?.Connected ?? false)
+            if (clientSocket != null && clientSocket.Connected)
             {
                 latencyStopwatch.Stop();
                 isConnected = true;
-                networkStream = tcpClient.GetStream();
 
                 UpdateUI(() =>
                 {
@@ -63,22 +64,18 @@ public partial class FormClient : Form
                     txtServerIP.Enabled = false;
                     txtPort.Enabled = false;
                     txtPassword.Enabled = false;
-                    lblConnectionStatusValue.Text = "Connected";
+                    lblConnectionStatusValue.Text = "Connected (Pure Socket)";
                     lblConnectionStatusValue.ForeColor = Color.Green;
                     lblServerInfoValue.Text = $"{txtServerIP.Text}:{txtPort.Text}";
                     lblLatency.Text = $"Latency: {latencyStopwatch.ElapsedMilliseconds} ms";
                 });
+                // Khởi tạo ScreenReceiver để nhận ảnh qua UDP
+                screenReceiver = new ScreenReceiver();
+                screenReceiver.OnImageReceived += UpdateDesktopImage; // Gắn event khi có ảnh
+                screenReceiver.StartListening(5001);
 
-                // Start receiving data from server
                 receiveThread = new Thread(ReceiveData) { IsBackground = true };
                 receiveThread.Start();
-            }
-            else
-            {
-                UpdateUI(() =>
-                {
-                    MessageBox.Show("Failed to connect to server.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                });
             }
         }
         catch (Exception ex)
@@ -90,24 +87,43 @@ public partial class FormClient : Form
         }
     }
 
+    private void UpdateDesktopImage(Image img)
+    {
+        if (InvokeRequired)
+        {
+            // Dùng BeginInvoke để luồng UI vẽ ảnh mượt mà không bị khựng
+            BeginInvoke(new Action<Image>(UpdateDesktopImage), img);
+            return;
+        }
+
+        var oldImage = picDesktop.Image;
+        picDesktop.Image = img;
+
+        // Xóa ảnh cũ khỏi RAM sau khi đã gắn ảnh mới
+        oldImage?.Dispose();
+    }
+
     private void ReceiveData()
     {
         byte[] buffer = new byte[65536]; // Large buffer for image data
 
         try
         {
-            while (isConnected && networkStream != null)
+            while (isConnected && clientSocket != null)
             {
-                int bytesRead = networkStream.Read(buffer, 0, buffer.Length);
+                // Đọc dữ liệu trực tiếp bằng Socket
+                int bytesRead = clientSocket.Receive(buffer);
                 if (bytesRead == 0)
                 {
-                    break;
+                    break; // Server chủ động đóng kết nối
                 }
 
-                // Handle received screenshot data here
-                // This would decode and display the image
                 ProcessReceivedData(buffer, bytesRead);
             }
+        }
+        catch (SocketException)
+        {
+            // Mất kết nối mạng
         }
         catch (Exception ex)
         {
@@ -138,13 +154,22 @@ public partial class FormClient : Form
 
     private void DisconnectFromServer()
     {
+        if (!isConnected) return;
+
         try
         {
             isConnected = false;
-            networkStream?.Close();
-            tcpClient?.Close();
-            networkStream = null;
-            tcpClient = null;
+
+            screenReceiver?.StopListening();
+            screenReceiver = null;
+
+            // Đóng luồng Socket an toàn (ngắt Send và Receive)
+            if (clientSocket != null && clientSocket.Connected)
+            {
+                clientSocket.Shutdown(SocketShutdown.Both);
+            }
+            clientSocket?.Close();
+            clientSocket = null;
 
             UpdateUI(() =>
             {
@@ -210,13 +235,7 @@ public partial class FormClient : Form
 
     private void UpdateUI(Action action)
     {
-        if (InvokeRequired)
-        {
-            Invoke(action);
-        }
-        else
-        {
-            action();
-        }
+        if (InvokeRequired) Invoke(action);
+        else action();
     }
 }
