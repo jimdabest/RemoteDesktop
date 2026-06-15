@@ -28,302 +28,300 @@ partial class FormClient
     /// </summary>
     private void InitializeComponent()
     {
-        this.components = new System.ComponentModel.Container();
-        this.panelHeader = new System.Windows.Forms.Panel();
-        this.lblTitle = new System.Windows.Forms.Label();
-        this.panelConnection = new System.Windows.Forms.Panel();
-        this.btnDisconnect = new System.Windows.Forms.Button();
-        this.btnConnect = new System.Windows.Forms.Button();
-        this.txtPassword = new System.Windows.Forms.TextBox();
-        this.lblPassword = new System.Windows.Forms.Label();
-        this.txtPort = new System.Windows.Forms.TextBox();
-        this.lblPort = new System.Windows.Forms.Label();
-        this.txtServerIP = new System.Windows.Forms.TextBox();
-        this.lblServerIP = new System.Windows.Forms.Label();
-        this.panelStatus = new System.Windows.Forms.Panel();
-        this.lblConnectionStatusValue = new System.Windows.Forms.Label();
-        this.lblConnectionStatus = new System.Windows.Forms.Label();
-        this.lblServerInfoValue = new System.Windows.Forms.Label();
-        this.lblServerInfo = new System.Windows.Forms.Label();
-        this.panelDesktop = new System.Windows.Forms.Panel();
-        this.picDesktop = new System.Windows.Forms.PictureBox();
-        this.panelControls = new System.Windows.Forms.Panel();
-        this.btnFullscreen = new System.Windows.Forms.Button();
-        this.btnSettings = new System.Windows.Forms.Button();
-        this.lblLatency = new System.Windows.Forms.Label();
-        this.panelHeader.SuspendLayout();
-        this.panelConnection.SuspendLayout();
-        this.panelStatus.SuspendLayout();
-        this.panelDesktop.SuspendLayout();
-        ((System.ComponentModel.ISupportInitialize)(this.picDesktop)).BeginInit();
-        this.panelControls.SuspendLayout();
-        this.SuspendLayout();
+        panelHeader = new Panel();
+        lblTitle = new Label();
+        panelConnection = new Panel();
+        btnDisconnect = new Button();
+        btnConnect = new Button();
+        txtPassword = new TextBox();
+        lblPassword = new Label();
+        txtPort = new TextBox();
+        lblPort = new Label();
+        txtServerIP = new TextBox();
+        lblServerIP = new Label();
+        panelStatus = new Panel();
+        lblConnectionStatusValue = new Label();
+        lblConnectionStatus = new Label();
+        lblServerInfoValue = new Label();
+        lblServerInfo = new Label();
+        panelDesktop = new Panel();
+        picDesktop = new PictureBox();
+        panelControls = new Panel();
+        lblLatency = new Label();
+        btnFullscreen = new Button();
+        btnSettings = new Button();
+        panelHeader.SuspendLayout();
+        panelConnection.SuspendLayout();
+        panelStatus.SuspendLayout();
+        panelDesktop.SuspendLayout();
+        ((System.ComponentModel.ISupportInitialize)picDesktop).BeginInit();
+        panelControls.SuspendLayout();
+        SuspendLayout();
         // 
         // panelHeader
         // 
-        this.panelHeader.BackColor = System.Drawing.Color.DodgerBlue;
-        this.panelHeader.Controls.Add(this.lblTitle);
-        this.panelHeader.Dock = System.Windows.Forms.DockStyle.Top;
-        this.panelHeader.Location = new System.Drawing.Point(0, 0);
-        this.panelHeader.Name = "panelHeader";
-        this.panelHeader.Size = new System.Drawing.Size(1200, 60);
-        this.panelHeader.TabIndex = 0;
+        panelHeader.BackColor = Color.DodgerBlue;
+        panelHeader.Controls.Add(lblTitle);
+        panelHeader.Dock = DockStyle.Top;
+        panelHeader.Location = new Point(0, 0);
+        panelHeader.Name = "panelHeader";
+        panelHeader.Size = new Size(1200, 60);
+        panelHeader.TabIndex = 0;
         // 
         // lblTitle
         // 
-        this.lblTitle.AutoSize = true;
-        this.lblTitle.Font = new System.Drawing.Font("Arial", 20F, System.Drawing.FontStyle.Bold);
-        this.lblTitle.ForeColor = System.Drawing.Color.White;
-        this.lblTitle.Location = new System.Drawing.Point(20, 15);
-        this.lblTitle.Name = "lblTitle";
-        this.lblTitle.Size = new System.Drawing.Size(260, 32);
-        this.lblTitle.TabIndex = 0;
-        this.lblTitle.Text = "Remote Desktop Client";
+        lblTitle.AutoSize = true;
+        lblTitle.Font = new Font("Arial", 20F, FontStyle.Bold);
+        lblTitle.ForeColor = Color.White;
+        lblTitle.Location = new Point(20, 15);
+        lblTitle.Name = "lblTitle";
+        lblTitle.Size = new Size(389, 40);
+        lblTitle.TabIndex = 0;
+        lblTitle.Text = "Remote Desktop Client";
         // 
         // panelConnection
         // 
-        this.panelConnection.BackColor = System.Drawing.Color.WhiteSmoke;
-        this.panelConnection.Controls.Add(this.btnDisconnect);
-        this.panelConnection.Controls.Add(this.btnConnect);
-        this.panelConnection.Controls.Add(this.txtPassword);
-        this.panelConnection.Controls.Add(this.lblPassword);
-        this.panelConnection.Controls.Add(this.txtPort);
-        this.panelConnection.Controls.Add(this.lblPort);
-        this.panelConnection.Controls.Add(this.txtServerIP);
-        this.panelConnection.Controls.Add(this.lblServerIP);
-        this.panelConnection.Dock = System.Windows.Forms.DockStyle.Top;
-        this.panelConnection.Location = new System.Drawing.Point(0, 60);
-        this.panelConnection.Name = "panelConnection";
-        this.panelConnection.Size = new System.Drawing.Size(1200, 110);
-        this.panelConnection.TabIndex = 1;
+        panelConnection.BackColor = Color.WhiteSmoke;
+        panelConnection.Controls.Add(btnDisconnect);
+        panelConnection.Controls.Add(btnConnect);
+        panelConnection.Controls.Add(txtPassword);
+        panelConnection.Controls.Add(lblPassword);
+        panelConnection.Controls.Add(txtPort);
+        panelConnection.Controls.Add(lblPort);
+        panelConnection.Controls.Add(txtServerIP);
+        panelConnection.Controls.Add(lblServerIP);
+        panelConnection.Dock = DockStyle.Top;
+        panelConnection.Location = new Point(0, 60);
+        panelConnection.Name = "panelConnection";
+        panelConnection.Size = new Size(1200, 110);
+        panelConnection.TabIndex = 1;
         // 
         // btnDisconnect
         // 
-        this.btnDisconnect.BackColor = System.Drawing.Color.Red;
-        this.btnDisconnect.Enabled = false;
-        this.btnDisconnect.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold);
-        this.btnDisconnect.ForeColor = System.Drawing.Color.White;
-        this.btnDisconnect.Location = new System.Drawing.Point(550, 60);
-        this.btnDisconnect.Name = "btnDisconnect";
-        this.btnDisconnect.Size = new System.Drawing.Size(100, 40);
-        this.btnDisconnect.TabIndex = 7;
-        this.btnDisconnect.Text = "Disconnect";
-        this.btnDisconnect.UseVisualStyleBackColor = false;
-        this.btnDisconnect.Click += new System.EventHandler(this.btnDisconnect_Click);
+        btnDisconnect.BackColor = Color.Red;
+        btnDisconnect.Enabled = false;
+        btnDisconnect.Font = new Font("Arial", 10F, FontStyle.Bold);
+        btnDisconnect.ForeColor = Color.White;
+        btnDisconnect.Location = new Point(550, 60);
+        btnDisconnect.Name = "btnDisconnect";
+        btnDisconnect.Size = new Size(100, 40);
+        btnDisconnect.TabIndex = 7;
+        btnDisconnect.Text = "Disconnect";
+        btnDisconnect.UseVisualStyleBackColor = false;
+        btnDisconnect.Click += btnDisconnect_Click;
         // 
         // btnConnect
         // 
-        this.btnConnect.BackColor = System.Drawing.Color.Green;
-        this.btnConnect.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold);
-        this.btnConnect.ForeColor = System.Drawing.Color.White;
-        this.btnConnect.Location = new System.Drawing.Point(440, 60);
-        this.btnConnect.Name = "btnConnect";
-        this.btnConnect.Size = new System.Drawing.Size(100, 40);
-        this.btnConnect.TabIndex = 6;
-        this.btnConnect.Text = "Connect";
-        this.btnConnect.UseVisualStyleBackColor = false;
-        this.btnConnect.Click += new System.EventHandler(this.btnConnect_Click);
+        btnConnect.BackColor = Color.Green;
+        btnConnect.Font = new Font("Arial", 10F, FontStyle.Bold);
+        btnConnect.ForeColor = Color.White;
+        btnConnect.Location = new Point(440, 60);
+        btnConnect.Name = "btnConnect";
+        btnConnect.Size = new Size(100, 40);
+        btnConnect.TabIndex = 6;
+        btnConnect.Text = "Connect";
+        btnConnect.UseVisualStyleBackColor = false;
+        btnConnect.Click += btnConnect_Click;
         // 
         // txtPassword
         // 
-        this.txtPassword.Font = new System.Drawing.Font("Arial", 10F);
-        this.txtPassword.Location = new System.Drawing.Point(800, 35);
-        this.txtPassword.Name = "txtPassword";
-        this.txtPassword.Size = new System.Drawing.Size(150, 23);
-        this.txtPassword.TabIndex = 5;
-        this.txtPassword.UseSystemPasswordChar = true;
+        txtPassword.Font = new Font("Arial", 10F);
+        txtPassword.Location = new Point(800, 35);
+        txtPassword.Name = "txtPassword";
+        txtPassword.Size = new Size(150, 27);
+        txtPassword.TabIndex = 5;
+        txtPassword.UseSystemPasswordChar = true;
         // 
         // lblPassword
         // 
-        this.lblPassword.AutoSize = true;
-        this.lblPassword.Font = new System.Drawing.Font("Arial", 10F);
-        this.lblPassword.Location = new System.Drawing.Point(720, 38);
-        this.lblPassword.Name = "lblPassword";
-        this.lblPassword.Size = new System.Drawing.Size(74, 16);
-        this.lblPassword.TabIndex = 4;
-        this.lblPassword.Text = "Password:";
+        lblPassword.AutoSize = true;
+        lblPassword.Font = new Font("Arial", 10F);
+        lblPassword.Location = new Point(720, 38);
+        lblPassword.Name = "lblPassword";
+        lblPassword.Size = new Size(85, 19);
+        lblPassword.TabIndex = 4;
+        lblPassword.Text = "Password:";
         // 
         // txtPort
         // 
-        this.txtPort.Font = new System.Drawing.Font("Arial", 10F);
-        this.txtPort.Location = new System.Drawing.Point(540, 35);
-        this.txtPort.Name = "txtPort";
-        this.txtPort.Size = new System.Drawing.Size(80, 23);
-        this.txtPort.TabIndex = 3;
-        this.txtPort.Text = "5000";
+        txtPort.Font = new Font("Arial", 10F);
+        txtPort.Location = new Point(540, 35);
+        txtPort.Name = "txtPort";
+        txtPort.Size = new Size(80, 27);
+        txtPort.TabIndex = 3;
+        txtPort.Text = "5000";
         // 
         // lblPort
         // 
-        this.lblPort.AutoSize = true;
-        this.lblPort.Font = new System.Drawing.Font("Arial", 10F);
-        this.lblPort.Location = new System.Drawing.Point(503, 38);
-        this.lblPort.Name = "lblPort";
-        this.lblPort.Size = new System.Drawing.Size(31, 16);
-        this.lblPort.TabIndex = 2;
-        this.lblPort.Text = "Port:";
+        lblPort.AutoSize = true;
+        lblPort.Font = new Font("Arial", 10F);
+        lblPort.Location = new Point(503, 38);
+        lblPort.Name = "lblPort";
+        lblPort.Size = new Size(44, 19);
+        lblPort.TabIndex = 2;
+        lblPort.Text = "Port:";
         // 
         // txtServerIP
         // 
-        this.txtServerIP.Font = new System.Drawing.Font("Arial", 10F);
-        this.txtServerIP.Location = new System.Drawing.Point(350, 35);
-        this.txtServerIP.Name = "txtServerIP";
-        this.txtServerIP.Size = new System.Drawing.Size(140, 23);
-        this.txtServerIP.TabIndex = 1;
-        this.txtServerIP.Text = "127.0.0.1";
+        txtServerIP.Font = new Font("Arial", 10F);
+        txtServerIP.Location = new Point(350, 35);
+        txtServerIP.Name = "txtServerIP";
+        txtServerIP.Size = new Size(140, 27);
+        txtServerIP.TabIndex = 1;
+        txtServerIP.Text = "127.0.0.1";
         // 
         // lblServerIP
         // 
-        this.lblServerIP.AutoSize = true;
-        this.lblServerIP.Font = new System.Drawing.Font("Arial", 10F);
-        this.lblServerIP.Location = new System.Drawing.Point(280, 38);
-        this.lblServerIP.Name = "lblServerIP";
-        this.lblServerIP.Size = new System.Drawing.Size(64, 16);
-        this.lblServerIP.TabIndex = 0;
-        this.lblServerIP.Text = "Server IP:";
+        lblServerIP.AutoSize = true;
+        lblServerIP.Font = new Font("Arial", 10F);
+        lblServerIP.Location = new Point(280, 38);
+        lblServerIP.Name = "lblServerIP";
+        lblServerIP.Size = new Size(83, 19);
+        lblServerIP.TabIndex = 0;
+        lblServerIP.Text = "Server IP:";
         // 
         // panelStatus
         // 
-        this.panelStatus.BackColor = System.Drawing.Color.LightGray;
-        this.panelStatus.Controls.Add(this.lblConnectionStatusValue);
-        this.panelStatus.Controls.Add(this.lblConnectionStatus);
-        this.panelStatus.Controls.Add(this.lblServerInfoValue);
-        this.panelStatus.Controls.Add(this.lblServerInfo);
-        this.panelStatus.Dock = System.Windows.Forms.DockStyle.Top;
-        this.panelStatus.Location = new System.Drawing.Point(0, 170);
-        this.panelStatus.Name = "panelStatus";
-        this.panelStatus.Size = new System.Drawing.Size(1200, 50);
-        this.panelStatus.TabIndex = 2;
+        panelStatus.BackColor = Color.LightGray;
+        panelStatus.Controls.Add(lblConnectionStatusValue);
+        panelStatus.Controls.Add(lblConnectionStatus);
+        panelStatus.Controls.Add(lblServerInfoValue);
+        panelStatus.Controls.Add(lblServerInfo);
+        panelStatus.Dock = DockStyle.Top;
+        panelStatus.Location = new Point(0, 170);
+        panelStatus.Name = "panelStatus";
+        panelStatus.Size = new Size(1200, 50);
+        panelStatus.TabIndex = 2;
         // 
         // lblConnectionStatusValue
         // 
-        this.lblConnectionStatusValue.AutoSize = true;
-        this.lblConnectionStatusValue.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold);
-        this.lblConnectionStatusValue.ForeColor = System.Drawing.Color.Red;
-        this.lblConnectionStatusValue.Location = new System.Drawing.Point(150, 15);
-        this.lblConnectionStatusValue.Name = "lblConnectionStatusValue";
-        this.lblConnectionStatusValue.Size = new System.Drawing.Size(102, 16);
-        this.lblConnectionStatusValue.TabIndex = 3;
-        this.lblConnectionStatusValue.Text = "Disconnected";
+        lblConnectionStatusValue.AutoSize = true;
+        lblConnectionStatusValue.Font = new Font("Arial", 10F, FontStyle.Bold);
+        lblConnectionStatusValue.ForeColor = Color.Red;
+        lblConnectionStatusValue.Location = new Point(150, 15);
+        lblConnectionStatusValue.Name = "lblConnectionStatusValue";
+        lblConnectionStatusValue.Size = new Size(116, 19);
+        lblConnectionStatusValue.TabIndex = 3;
+        lblConnectionStatusValue.Text = "Disconnected";
         // 
         // lblConnectionStatus
         // 
-        this.lblConnectionStatus.AutoSize = true;
-        this.lblConnectionStatus.Font = new System.Drawing.Font("Arial", 10F);
-        this.lblConnectionStatus.Location = new System.Drawing.Point(20, 15);
-        this.lblConnectionStatus.Name = "lblConnectionStatus";
-        this.lblConnectionStatus.Size = new System.Drawing.Size(124, 16);
-        this.lblConnectionStatus.TabIndex = 2;
-        this.lblConnectionStatus.Text = "Connection Status:";
+        lblConnectionStatus.AutoSize = true;
+        lblConnectionStatus.Font = new Font("Arial", 10F);
+        lblConnectionStatus.Location = new Point(20, 15);
+        lblConnectionStatus.Name = "lblConnectionStatus";
+        lblConnectionStatus.Size = new Size(147, 19);
+        lblConnectionStatus.TabIndex = 2;
+        lblConnectionStatus.Text = "Connection Status:";
         // 
         // lblServerInfoValue
         // 
-        this.lblServerInfoValue.AutoSize = true;
-        this.lblServerInfoValue.Font = new System.Drawing.Font("Arial", 10F);
-        this.lblServerInfoValue.Location = new System.Drawing.Point(550, 15);
-        this.lblServerInfoValue.Name = "lblServerInfoValue";
-        this.lblServerInfoValue.Size = new System.Drawing.Size(11, 16);
-        this.lblServerInfoValue.TabIndex = 1;
-        this.lblServerInfoValue.Text = "-";
+        lblServerInfoValue.AutoSize = true;
+        lblServerInfoValue.Font = new Font("Arial", 10F);
+        lblServerInfoValue.Location = new Point(550, 15);
+        lblServerInfoValue.Name = "lblServerInfoValue";
+        lblServerInfoValue.Size = new Size(15, 19);
+        lblServerInfoValue.TabIndex = 1;
+        lblServerInfoValue.Text = "-";
         // 
         // lblServerInfo
         // 
-        this.lblServerInfo.AutoSize = true;
-        this.lblServerInfo.Font = new System.Drawing.Font("Arial", 10F);
-        this.lblServerInfo.Location = new System.Drawing.Point(380, 15);
-        this.lblServerInfo.Name = "lblServerInfo";
-        this.lblServerInfo.Size = new System.Drawing.Size(164, 16);
-        this.lblServerInfo.TabIndex = 0;
-        this.lblServerInfo.Text = "Connected Server Info:";
+        lblServerInfo.AutoSize = true;
+        lblServerInfo.Font = new Font("Arial", 10F);
+        lblServerInfo.Location = new Point(380, 15);
+        lblServerInfo.Name = "lblServerInfo";
+        lblServerInfo.Size = new Size(179, 19);
+        lblServerInfo.TabIndex = 0;
+        lblServerInfo.Text = "Connected Server Info:";
         // 
         // panelDesktop
         // 
-        this.panelDesktop.BackColor = System.Drawing.Color.Black;
-        this.panelDesktop.Controls.Add(this.picDesktop);
-        this.panelDesktop.Dock = System.Windows.Forms.DockStyle.Fill;
-        this.panelDesktop.Location = new System.Drawing.Point(0, 220);
-        this.panelDesktop.Name = "panelDesktop";
-        this.panelDesktop.Size = new System.Drawing.Size(1200, 430);
-        this.panelDesktop.TabIndex = 3;
+        panelDesktop.BackColor = Color.Black;
+        panelDesktop.Controls.Add(picDesktop);
+        panelDesktop.Dock = DockStyle.Fill;
+        panelDesktop.Location = new Point(0, 220);
+        panelDesktop.Name = "panelDesktop";
+        panelDesktop.Size = new Size(1200, 430);
+        panelDesktop.TabIndex = 3;
         // 
         // picDesktop
         // 
-        this.picDesktop.BackColor = System.Drawing.Color.Black;
-        this.picDesktop.Dock = System.Windows.Forms.DockStyle.Fill;
-        this.picDesktop.Location = new System.Drawing.Point(0, 0);
-        this.picDesktop.Name = "picDesktop";
-        this.picDesktop.Size = new System.Drawing.Size(1200, 430);
-        this.picDesktop.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-        this.picDesktop.TabIndex = 0;
-        this.picDesktop.TabStop = false;
+        picDesktop.BackColor = Color.Black;
+        picDesktop.Dock = DockStyle.Fill;
+        picDesktop.Location = new Point(0, 0);
+        picDesktop.Name = "picDesktop";
+        picDesktop.Size = new Size(1200, 430);
+        picDesktop.TabIndex = 0;
+        picDesktop.TabStop = false;
         // 
         // panelControls
         // 
-        this.panelControls.BackColor = System.Drawing.Color.LightGray;
-        this.panelControls.Controls.Add(this.lblLatency);
-        this.panelControls.Controls.Add(this.btnFullscreen);
-        this.panelControls.Controls.Add(this.btnSettings);
-        this.panelControls.Dock = System.Windows.Forms.DockStyle.Bottom;
-        this.panelControls.Location = new System.Drawing.Point(0, 650);
-        this.panelControls.Name = "panelControls";
-        this.panelControls.Size = new System.Drawing.Size(1200, 50);
-        this.panelControls.TabIndex = 4;
-        // 
-        // btnFullscreen
-        // 
-        this.btnFullscreen.Location = new System.Drawing.Point(100, 12);
-        this.btnFullscreen.Name = "btnFullscreen";
-        this.btnFullscreen.Size = new System.Drawing.Size(80, 30);
-        this.btnFullscreen.TabIndex = 2;
-        this.btnFullscreen.Text = "Fullscreen";
-        this.btnFullscreen.UseVisualStyleBackColor = true;
-        this.btnFullscreen.Click += new System.EventHandler(this.btnFullscreen_Click);
-        // 
-        // btnSettings
-        // 
-        this.btnSettings.Location = new System.Drawing.Point(190, 12);
-        this.btnSettings.Name = "btnSettings";
-        this.btnSettings.Size = new System.Drawing.Size(80, 30);
-        this.btnSettings.TabIndex = 1;
-        this.btnSettings.Text = "Settings";
-        this.btnSettings.UseVisualStyleBackColor = true;
-        this.btnSettings.Click += new System.EventHandler(this.btnSettings_Click);
+        panelControls.BackColor = Color.LightGray;
+        panelControls.Controls.Add(lblLatency);
+        panelControls.Controls.Add(btnFullscreen);
+        panelControls.Controls.Add(btnSettings);
+        panelControls.Dock = DockStyle.Bottom;
+        panelControls.Location = new Point(0, 650);
+        panelControls.Name = "panelControls";
+        panelControls.Size = new Size(1200, 50);
+        panelControls.TabIndex = 4;
         // 
         // lblLatency
         // 
-        this.lblLatency.AutoSize = true;
-        this.lblLatency.Font = new System.Drawing.Font("Arial", 10F);
-        this.lblLatency.Location = new System.Drawing.Point(1000, 17);
-        this.lblLatency.Name = "lblLatency";
-        this.lblLatency.Size = new System.Drawing.Size(100, 16);
-        this.lblLatency.TabIndex = 3;
-        this.lblLatency.Text = "Latency: -- ms";
+        lblLatency.AutoSize = true;
+        lblLatency.Font = new Font("Arial", 10F);
+        lblLatency.Location = new Point(1000, 17);
+        lblLatency.Name = "lblLatency";
+        lblLatency.Size = new Size(115, 19);
+        lblLatency.TabIndex = 3;
+        lblLatency.Text = "Latency: -- ms";
         // 
-        // Form1
+        // btnFullscreen
         // 
-        this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-        this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-        this.ClientSize = new System.Drawing.Size(1200, 700);
-        this.Controls.Add(this.panelDesktop);
-        this.Controls.Add(this.panelStatus);
-        this.Controls.Add(this.panelConnection);
-        this.Controls.Add(this.panelHeader);
-        this.Controls.Add(this.panelControls);
-        this.Font = new System.Drawing.Font("Arial", 9F);
-        this.Name = "Form1";
-        this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-        this.Text = "Remote Desktop Client";
-        this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
-        this.panelHeader.ResumeLayout(false);
-        this.panelHeader.PerformLayout();
-        this.panelConnection.ResumeLayout(false);
-        this.panelConnection.PerformLayout();
-        this.panelStatus.ResumeLayout(false);
-        this.panelStatus.PerformLayout();
-        this.panelDesktop.ResumeLayout(false);
-        ((System.ComponentModel.ISupportInitialize)(this.picDesktop)).EndInit();
-        this.panelControls.ResumeLayout(false);
-        this.panelControls.PerformLayout();
-        this.ResumeLayout(false);
+        btnFullscreen.Location = new Point(100, 12);
+        btnFullscreen.Name = "btnFullscreen";
+        btnFullscreen.Size = new Size(80, 30);
+        btnFullscreen.TabIndex = 2;
+        btnFullscreen.Text = "Fullscreen";
+        btnFullscreen.UseVisualStyleBackColor = true;
+        btnFullscreen.Click += btnFullscreen_Click;
+        // 
+        // btnSettings
+        // 
+        btnSettings.Location = new Point(190, 12);
+        btnSettings.Name = "btnSettings";
+        btnSettings.Size = new Size(80, 30);
+        btnSettings.TabIndex = 1;
+        btnSettings.Text = "Settings";
+        btnSettings.UseVisualStyleBackColor = true;
+        btnSettings.Click += btnSettings_Click;
+        // 
+        // FormClient
+        // 
+        AutoScaleDimensions = new SizeF(8F, 17F);
+        AutoScaleMode = AutoScaleMode.Font;
+        ClientSize = new Size(1200, 700);
+        Controls.Add(panelDesktop);
+        Controls.Add(panelStatus);
+        Controls.Add(panelConnection);
+        Controls.Add(panelHeader);
+        Controls.Add(panelControls);
+        Font = new Font("Arial", 9F);
+        Name = "FormClient";
+        StartPosition = FormStartPosition.CenterScreen;
+        Text = "Remote Desktop Client";
+        FormClosing += Form1_FormClosing;
+        panelHeader.ResumeLayout(false);
+        panelHeader.PerformLayout();
+        panelConnection.ResumeLayout(false);
+        panelConnection.PerformLayout();
+        panelStatus.ResumeLayout(false);
+        panelStatus.PerformLayout();
+        panelDesktop.ResumeLayout(false);
+        ((System.ComponentModel.ISupportInitialize)picDesktop).EndInit();
+        panelControls.ResumeLayout(false);
+        panelControls.PerformLayout();
+        ResumeLayout(false);
     }
 
     #endregion
@@ -351,4 +349,6 @@ partial class FormClient
     private System.Windows.Forms.Button btnFullscreen;
     private System.Windows.Forms.Button btnSettings;
     private System.Windows.Forms.Label lblLatency;
+    private Label label2;
+    private Label label1;
 }

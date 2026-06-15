@@ -1,21 +1,38 @@
 using System.Diagnostics;
 using System.Net.Sockets;
+using RemoteDesktopShared;
 
 namespace RemoteDesktopClient;
 
 public partial class FormClient : Form
 {
+    #region Bien toan cuc 
     private Socket clientSocket;
     private bool isConnected = false;
     private Thread? receiveThread;
     private Stopwatch latencyStopwatch = new();
     private ScreenReceiver screenReceiver;
+    #endregion
 
+    #region Constructor va Initialization
     public FormClient()
     {
         InitializeComponent();
-    }
 
+        // Bật nhận diện phím cho Form
+        this.KeyPreview = true;
+
+        // Đăng ký các event chuột và phím
+        picDesktop.MouseMove += PicDesktop_MouseMove;
+        picDesktop.MouseDown += PicDesktop_MouseDown;
+        picDesktop.MouseUp += PicDesktop_MouseUp;
+
+        this.KeyDown += FormClient_KeyDown;
+        this.KeyUp += FormClient_KeyUp;
+    }
+    #endregion
+
+    #region UI Control Events
     private void btnConnect_Click(object sender, EventArgs e)
     {
         if (string.IsNullOrWhiteSpace(txtServerIP.Text))
@@ -46,6 +63,111 @@ public partial class FormClient : Form
         }
     }
 
+    private void btnDisconnect_Click(object sender, EventArgs e)
+    {
+        DisconnectFromServer();
+    }
+
+    private void btnFullscreen_Click(object sender, EventArgs e)
+    {
+        if (!isConnected)
+        {
+            MessageBox.Show("Please connect to a server first.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        if (this.FormBorderStyle == FormBorderStyle.None)
+        {
+            // Exit fullscreen
+            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.WindowState = FormWindowState.Normal;
+            this.MaximizeBox = false;
+        }
+        else
+        {
+            // Enter fullscreen
+            this.FormBorderStyle = FormBorderStyle.None;
+            this.WindowState = FormWindowState.Maximized;
+        }
+    }
+
+    private void btnSettings_Click(object sender, EventArgs e)
+    {
+        MessageBox.Show("Settings window will be implemented.\n\nAvailable options:\n- Image quality\n- Compression level\n- Input method\n- Display settings",
+            "Settings",
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information);
+    }
+
+    private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+    {
+        if (isConnected)
+        {
+            DisconnectFromServer();
+        }
+    }
+    #endregion
+
+    #region Input capture events 
+    private void PicDesktop_MouseMove(object? sender, MouseEventArgs e)
+    {
+        SendCommand(new CommandPacket { Type = CommandType.MouseMove, X = e.X, Y = e.Y, KeyCode = 0 });
+    }
+
+    private void PicDesktop_MouseDown(object? sender, MouseEventArgs e)
+    {
+        var cmdType = CommandType.MouseMove;
+
+        if (e.Button == MouseButtons.Left) cmdType = CommandType.LeftMouseDown;
+        else if (e.Button == MouseButtons.Right) cmdType = CommandType.RightMouseDown;
+
+        if (cmdType != CommandType.MouseMove)
+        {
+            SendCommand(new CommandPacket { Type = cmdType, X = e.X, Y = e.Y, KeyCode = 0 });
+        }
+    }
+
+    private void PicDesktop_MouseUp(object? sender, MouseEventArgs e)
+    {
+        var cmdType = CommandType.MouseMove;
+
+        if (e.Button == MouseButtons.Left) cmdType = CommandType.LeftMouseUp;
+        else if (e.Button == MouseButtons.Right) cmdType = CommandType.RightMouseUp;
+
+        if (cmdType != CommandType.MouseMove)
+        {
+            SendCommand(new CommandPacket { Type = cmdType, X = e.X, Y = e.Y, KeyCode = 0 });
+        }
+    }
+
+    private void FormClient_KeyDown(object? sender, KeyEventArgs e)
+    {
+        SendCommand(new CommandPacket { Type = CommandType.KeyDown, X = 0, Y = 0, KeyCode = (int)e.KeyCode });
+    }
+
+    private void FormClient_KeyUp(object? sender, KeyEventArgs e)
+    {
+        SendCommand(new CommandPacket { Type = CommandType.KeyUp, X = 0, Y = 0, KeyCode = (int)e.KeyCode });
+    }
+    #endregion
+
+    #region Network Communication & Data Processing
+    private void SendCommand(CommandPacket packet)
+    {
+        if (isConnected && clientSocket != null && clientSocket.Connected)
+        {
+            try
+            {
+                byte[] data = packet.ToBytes();
+                clientSocket.Send(data);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Lỗi gửi lệnh: {ex.Message}");
+            }
+        }
+    }
+
     private void ConnectCallback(IAsyncResult result)
     {
         try
@@ -69,6 +191,7 @@ public partial class FormClient : Form
                     lblServerInfoValue.Text = $"{txtServerIP.Text}:{txtPort.Text}";
                     lblLatency.Text = $"Latency: {latencyStopwatch.ElapsedMilliseconds} ms";
                 });
+
                 // Khởi tạo ScreenReceiver để nhận ảnh qua UDP
                 screenReceiver = new ScreenReceiver();
                 screenReceiver.OnImageReceived += UpdateDesktopImage; // Gắn event khi có ảnh
@@ -85,22 +208,6 @@ public partial class FormClient : Form
                 MessageBox.Show($"Connection error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             });
         }
-    }
-
-    private void UpdateDesktopImage(Image img)
-    {
-        if (InvokeRequired)
-        {
-            // Dùng BeginInvoke để luồng UI vẽ ảnh mượt mà không bị khựng
-            BeginInvoke(new Action<Image>(UpdateDesktopImage), img);
-            return;
-        }
-
-        var oldImage = picDesktop.Image;
-        picDesktop.Image = img;
-
-        // Xóa ảnh cũ khỏi RAM sau khi đã gắn ảnh mới
-        oldImage?.Dispose();
     }
 
     private void ReceiveData()
@@ -147,11 +254,6 @@ public partial class FormClient : Form
         // 3. Display in picDesktop
     }
 
-    private void btnDisconnect_Click(object sender, EventArgs e)
-    {
-        DisconnectFromServer();
-    }
-
     private void DisconnectFromServer()
     {
         if (!isConnected) return;
@@ -194,43 +296,20 @@ public partial class FormClient : Form
         }
     }
 
-    private void btnFullscreen_Click(object sender, EventArgs e)
+    private void UpdateDesktopImage(Image img)
     {
-        if (!isConnected)
+        if (InvokeRequired)
         {
-            MessageBox.Show("Please connect to a server first.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            // Dùng BeginInvoke để luồng UI vẽ ảnh mượt mà không bị khựng
+            BeginInvoke(new Action<Image>(UpdateDesktopImage), img);
             return;
         }
 
-        if (this.FormBorderStyle == FormBorderStyle.None)
-        {
-            // Exit fullscreen
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.WindowState = FormWindowState.Normal;
-            this.MaximizeBox = false;
-        }
-        else
-        {
-            // Enter fullscreen
-            this.FormBorderStyle = FormBorderStyle.None;
-            this.WindowState = FormWindowState.Maximized;
-        }
-    }
+        var oldImage = picDesktop.Image;
+        picDesktop.Image = img;
 
-    private void btnSettings_Click(object sender, EventArgs e)
-    {
-        MessageBox.Show("Settings window will be implemented.\n\nAvailable options:\n- Image quality\n- Compression level\n- Input method\n- Display settings", 
-            "Settings", 
-            MessageBoxButtons.OK, 
-            MessageBoxIcon.Information);
-    }
-
-    private void Form1_FormClosing(object sender, FormClosingEventArgs e)
-    {
-        if (isConnected)
-        {
-            DisconnectFromServer();
-        }
+        // Xóa ảnh cũ khỏi RAM sau khi đã gắn ảnh mới
+        oldImage?.Dispose();
     }
 
     private void UpdateUI(Action action)
@@ -238,4 +317,5 @@ public partial class FormClient : Form
         if (InvokeRequired) Invoke(action);
         else action();
     }
+    #endregion
 }
