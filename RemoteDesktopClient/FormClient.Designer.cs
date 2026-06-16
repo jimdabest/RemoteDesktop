@@ -102,9 +102,9 @@ partial class FormClient
         btnDisconnect.Enabled = false;
         btnDisconnect.Font = new Font("Arial", 10F, FontStyle.Bold);
         btnDisconnect.ForeColor = Color.White;
-        btnDisconnect.Location = new Point(550, 60);
+        btnDisconnect.Location = new Point(130, 50);
         btnDisconnect.Name = "btnDisconnect";
-        btnDisconnect.Size = new Size(100, 40);
+        btnDisconnect.Size = new Size(174, 40);
         btnDisconnect.TabIndex = 7;
         btnDisconnect.Text = "Disconnect";
         btnDisconnect.UseVisualStyleBackColor = false;
@@ -115,7 +115,7 @@ partial class FormClient
         btnConnect.BackColor = Color.Green;
         btnConnect.Font = new Font("Arial", 10F, FontStyle.Bold);
         btnConnect.ForeColor = Color.White;
-        btnConnect.Location = new Point(440, 60);
+        btnConnect.Location = new Point(20, 50);
         btnConnect.Name = "btnConnect";
         btnConnect.Size = new Size(100, 40);
         btnConnect.TabIndex = 6;
@@ -126,7 +126,7 @@ partial class FormClient
         // txtPassword
         // 
         txtPassword.Font = new Font("Arial", 10F);
-        txtPassword.Location = new Point(800, 35);
+        txtPassword.Location = new Point(453, 15);
         txtPassword.Name = "txtPassword";
         txtPassword.Size = new Size(150, 27);
         txtPassword.TabIndex = 5;
@@ -136,7 +136,7 @@ partial class FormClient
         // 
         lblPassword.AutoSize = true;
         lblPassword.Font = new Font("Arial", 10F);
-        lblPassword.Location = new Point(720, 38);
+        lblPassword.Location = new Point(373, 18);
         lblPassword.Name = "lblPassword";
         lblPassword.Size = new Size(85, 19);
         lblPassword.TabIndex = 4;
@@ -145,7 +145,7 @@ partial class FormClient
         // txtPort
         // 
         txtPort.Font = new Font("Arial", 10F);
-        txtPort.Location = new Point(540, 35);
+        txtPort.Location = new Point(284, 12);
         txtPort.Name = "txtPort";
         txtPort.Size = new Size(80, 27);
         txtPort.TabIndex = 3;
@@ -155,7 +155,7 @@ partial class FormClient
         // 
         lblPort.AutoSize = true;
         lblPort.Font = new Font("Arial", 10F);
-        lblPort.Location = new Point(503, 38);
+        lblPort.Location = new Point(243, 15);
         lblPort.Name = "lblPort";
         lblPort.Size = new Size(44, 19);
         lblPort.TabIndex = 2;
@@ -164,7 +164,7 @@ partial class FormClient
         // txtServerIP
         // 
         txtServerIP.Font = new Font("Arial", 10F);
-        txtServerIP.Location = new Point(350, 35);
+        txtServerIP.Location = new Point(105, 12);
         txtServerIP.Name = "txtServerIP";
         txtServerIP.Size = new Size(140, 27);
         txtServerIP.TabIndex = 1;
@@ -174,7 +174,7 @@ partial class FormClient
         // 
         lblServerIP.AutoSize = true;
         lblServerIP.Font = new Font("Arial", 10F);
-        lblServerIP.Location = new Point(280, 38);
+        lblServerIP.Location = new Point(20, 15);
         lblServerIP.Name = "lblServerIP";
         lblServerIP.Size = new Size(83, 19);
         lblServerIP.TabIndex = 0;

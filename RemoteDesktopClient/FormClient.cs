@@ -18,7 +18,7 @@ public partial class FormClient : Form
     public FormClient()
     {
         InitializeComponent();
-
+        picDesktop.SizeMode = PictureBoxSizeMode.StretchImage;
         // Bật nhận diện phím cho Form
         this.KeyPreview = true;
 

@@ -53,8 +53,8 @@ namespace RemoteDesktopServer
                             g.CopyFromScreen(Point.Empty, Point.Empty, bounds.Size);
 
                             // BỔ SUNG MỚI: Vẽ đè con trỏ chuột lên bức ảnh vừa chụp
-                            Point cursorPos = System.Windows.Forms.Cursor.Position;
-                            System.Windows.Forms.Cursors.Default.Draw(g, new Rectangle(cursorPos, System.Windows.Forms.Cursors.Default.Size));
+                            //Point cursorPos = System.Windows.Forms.Cursor.Position;
+                            //System.Windows.Forms.Cursors.Default.Draw(g, new Rectangle(cursorPos, System.Windows.Forms.Cursors.Default.Size));
                         }
 
                         // 2. Ép xung nén ảnh JPEG (Giảm chất lượng xuống 50% để truyền cho mượt)
