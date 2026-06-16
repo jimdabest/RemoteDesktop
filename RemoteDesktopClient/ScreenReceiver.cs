@@ -19,19 +19,17 @@ namespace RemoteDesktopClient
         // Sự kiện báo cho Form biết khi ráp xong một bức ảnh
         public event Action<Image> OnImageReceived;
 
-        public void StartListening(int port)
+        public int StartListening(int port)
         {
-            // Khởi tạo Socket thuần cho UDP
             _udpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-
-            // Tăng bộ đệm nhận của OS lên 1 Megabyte để chống nghẽn mạng cục bộ
             _udpSocket.ReceiveBufferSize = 1024 * 1024;
-
             _udpSocket.Bind(new IPEndPoint(IPAddress.Any, port));
             _isListening = true;
 
             Thread listenThread = new Thread(ReceiveLoop) { IsBackground = true };
             listenThread.Start();
+
+            return ((IPEndPoint)_udpSocket.LocalEndPoint).Port;
         }
 
         public void StopListening()

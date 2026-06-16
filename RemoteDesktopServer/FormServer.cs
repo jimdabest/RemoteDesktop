@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
+// using System.Data; // Đã comment lại để tránh lỗi đụng độ CommandType
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -10,6 +10,8 @@ using System.Windows.Forms;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Runtime.InteropServices;
+using RemoteDesktopShared;
 
 namespace RemoteDesktopServer
 {
@@ -19,6 +21,23 @@ namespace RemoteDesktopServer
         private bool isServerRunning = false;
         private Thread listenerThread;
         private List<ClientConnection> connectedClients = new List<ClientConnection>();
+
+        #region Windows Thao Tac Phan Cung API
+        [DllImport("user32.dll")]
+        private static extern bool SetCursorPos(int X, int Y);
+
+        [DllImport("user32.dll")]
+        private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, uint dwExtraInfo);
+
+        [DllImport("user32.dll")]
+        private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, uint dwExtraInfo);
+
+        const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
+        const uint MOUSEEVENTF_LEFTUP = 0x0004;
+        const uint MOUSEEVENTF_RIGHTDOWN = 0x0008;
+        const uint MOUSEEVENTF_RIGHTUP = 0x0010;
+        const uint KEYEVENTF_KEYUP = 0x0002;
+        #endregion
 
         public FormServer()
         {
@@ -117,17 +136,15 @@ namespace RemoteDesktopServer
 
                     UpdateClientListUI();
 
-                    connection.Caster = new ScreenCaster(clientIP, 5001);
-                    connection.Caster.StartStreaming();
-                    AppendLog($"[{DateTime.Now:HH:mm:ss}] Started ScreenCaster (UDP: 5001) for {clientIP}");
+                    //connection.Caster = new ScreenCaster(clientIP, 5001);
+                    //connection.Caster.StartStreaming();
+                    //AppendLog($"[{DateTime.Now:HH:mm:ss}] Started ScreenCaster (UDP: 5001) for {clientIP}");
 
-                    // Start a thread to handle this client
                     Thread clientThread = new Thread(() => HandleClient(connection)) { IsBackground = true };
                     clientThread.Start();
                 }
                 catch (SocketException)
                 {
-                    // Server is stopping
                     break;
                 }
                 catch (Exception ex)
@@ -137,28 +154,35 @@ namespace RemoteDesktopServer
             }
         }
 
+        // ==========================================
+        // CẬP NHẬT: NHẬN DATA VÀ GIẢI MÃ LỆNH (24 BYTES)
+        // ==========================================
         private void HandleClient(ClientConnection connection)
         {
             try
             {
-                byte[] buffer = new byte[1024];
+                // CẬP NHẬT: Gói tin giờ là 24 bytes (thêm Width và Height)
+                byte[] buffer = new byte[24];
 
                 while (isServerRunning && connection.ClientSocket.Connected)
                 {
-                    // Nhận dữ liệu trực tiếp từ Socket
-                    int bytesRead = connection.ClientSocket.Receive(buffer);
-                    if (bytesRead == 0)
+                    int bytesRead = 0;
+
+                    // Đảm bảo nhận đủ 24 bytes dữ liệu thô
+                    while (bytesRead < 24)
                     {
-                        break; // Client ngắt kết nối
+                        int read = connection.ClientSocket.Receive(buffer, bytesRead, 24 - bytesRead, SocketFlags.None);
+                        if (read == 0) return;
+                        bytesRead += read;
                     }
 
-                    // Xử lý gói tin nhận được (ví dụ: CommandPacket) ở đây
-                    AppendLog($"[{DateTime.Now:HH:mm:ss}] Data received from {connection.IP}: {bytesRead} bytes");
+                    CommandPacket packet = CommandPacket.FromBytes(buffer);
+                    ExecuteCommand(packet, connection);
                 }
             }
             catch (SocketException)
             {
-                // Bỏ qua lỗi ngắt kết nối đột ngột
+                // Bỏ qua khi mất kết nối đột ngột
             }
             catch (Exception ex)
             {
@@ -172,6 +196,69 @@ namespace RemoteDesktopServer
                 connectedClients.Remove(connection);
                 AppendLog($"[{DateTime.Now:HH:mm:ss}] Client disconnected: {connection.IP}:{connection.Port}");
                 UpdateClientListUI();
+            }
+        }
+
+        // ==========================================
+        // CẬP NHẬT: TÍNH TAM SUẤT VÀ THỰC THI LỆNH
+        // ==========================================
+        private void ExecuteCommand(CommandPacket packet, ClientConnection connection)
+        {
+            // 1. Tính toán nội suy tọa độ
+            int targetX = packet.X;
+            int targetY = packet.Y;
+
+            // Lấy độ phân giải thực tế của màn hình Server
+            int serverWidth = Screen.PrimaryScreen.Bounds.Width;
+            int serverHeight = Screen.PrimaryScreen.Bounds.Height;
+
+            // Chỉ tính tam suất nếu Client có gửi thông số khung ảnh (tránh lỗi chia cho 0)
+            if (packet.ClientWidth > 0 && packet.ClientHeight > 0)
+            {
+                targetX = (packet.X * serverWidth) / packet.ClientWidth;
+                targetY = (packet.Y * serverHeight) / packet.ClientHeight;
+            }
+
+            // 2. Gọi lệnh phần cứng
+            switch (packet.Type)
+            {
+                case CommandType.RegisterUdpPort:
+                    int udpPort = packet.X; // Lấy cái Port mà Client vừa gửi qua
+                    connection.Caster = new ScreenCaster(connection.IP, udpPort);
+                    connection.Caster.StartStreaming();
+                    AppendLog($"[{DateTime.Now:HH:mm:ss}] Started ScreenCaster (UDP: {udpPort}) for {connection.IP}");
+                    break;
+                case CommandType.MouseMove:
+                    // Dùng tọa độ đã quy đổi để di chuyển chuột
+                    SetCursorPos(targetX, targetY);
+                    break;
+
+                case CommandType.LeftMouseDown:
+                    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                    break;
+
+                case CommandType.LeftMouseUp:
+                    mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+                    break;
+
+                case CommandType.RightMouseDown:
+                    mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
+                    break;
+
+                case CommandType.RightMouseUp:
+                    mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
+                    break;
+
+                case CommandType.KeyDown:
+                    keybd_event((byte)packet.KeyCode, 0, 0, 0);
+                    break;
+
+                case CommandType.KeyUp:
+                    keybd_event((byte)packet.KeyCode, 0, KEYEVENTF_KEYUP, 0);
+                    break;
+
+                default:
+                    break; // Đã sửa lỗi chữ linh tinh ở đây
             }
         }
 
@@ -205,7 +292,6 @@ namespace RemoteDesktopServer
             }
 
             txtLogs.AppendText(message + Environment.NewLine);
-            // Keep log size manageable - remove oldest lines if exceeds 10000
             if (txtLogs.Lines.Length > 10000)
             {
                 int linesToRemove = txtLogs.Lines.Length - 5000;
@@ -234,13 +320,12 @@ namespace RemoteDesktopServer
 
         private void panelControl_Paint(object sender, PaintEventArgs e)
         {
-
         }
     }
 
     public class ClientConnection
     {
-        public Socket ClientSocket { get; set; } 
+        public Socket ClientSocket { get; set; }
         public string IP { get; set; }
         public int Port { get; set; }
         public DateTime ConnectedTime { get; set; }

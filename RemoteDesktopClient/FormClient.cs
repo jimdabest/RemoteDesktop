@@ -6,7 +6,7 @@ namespace RemoteDesktopClient;
 
 public partial class FormClient : Form
 {
-    #region Bien toan cuc 
+    #region 1. Variables & Fields
     private Socket clientSocket;
     private bool isConnected = false;
     private Thread? receiveThread;
@@ -14,7 +14,7 @@ public partial class FormClient : Form
     private ScreenReceiver screenReceiver;
     #endregion
 
-    #region Constructor va Initialization
+    #region 2. Constructor & Initialization
     public FormClient()
     {
         InitializeComponent();
@@ -32,7 +32,7 @@ public partial class FormClient : Form
     }
     #endregion
 
-    #region UI Control Events
+    #region 3. UI Control Events
     private void btnConnect_Click(object sender, EventArgs e)
     {
         if (string.IsNullOrWhiteSpace(txtServerIP.Text))
@@ -108,10 +108,19 @@ public partial class FormClient : Form
     }
     #endregion
 
-    #region Input capture events 
+    #region 4. Input Capturing (Mouse & Keyboard)
     private void PicDesktop_MouseMove(object? sender, MouseEventArgs e)
     {
-        SendCommand(new CommandPacket { Type = CommandType.MouseMove, X = e.X, Y = e.Y, KeyCode = 0 });
+        //SendCommand(new CommandPacket { Type = CommandType.MouseMove, X = e.X, Y = e.Y, KeyCode = 0 });
+        SendCommand(new CommandPacket
+        {
+            Type = CommandType.MouseMove,
+            X = e.X,
+            Y = e.Y,
+            KeyCode = 0,
+            ClientWidth = picDesktop.Width,   // Gửi kèm chiều rộng
+            ClientHeight = picDesktop.Height  // Gửi kèm chiều cao
+        });
     }
 
     private void PicDesktop_MouseDown(object? sender, MouseEventArgs e)
@@ -151,7 +160,7 @@ public partial class FormClient : Form
     }
     #endregion
 
-    #region Network Communication & Data Processing
+    #region 5. Network Communication & Data Processing
     private void SendCommand(CommandPacket packet)
     {
         if (isConnected && clientSocket != null && clientSocket.Connected)
@@ -192,13 +201,20 @@ public partial class FormClient : Form
                     lblLatency.Text = $"Latency: {latencyStopwatch.ElapsedMilliseconds} ms";
                 });
 
-                // Khởi tạo ScreenReceiver để nhận ảnh qua UDP
                 screenReceiver = new ScreenReceiver();
-                screenReceiver.OnImageReceived += UpdateDesktopImage; // Gắn event khi có ảnh
-                screenReceiver.StartListening(5001);
+                screenReceiver.OnImageReceived += UpdateDesktopImage;
 
-                receiveThread = new Thread(ReceiveData) { IsBackground = true };
-                receiveThread.Start();
+                int assignedUdpPort = screenReceiver.StartListening(0);
+
+                SendCommand(new CommandPacket
+                {
+                    Type = CommandType.RegisterUdpPort,
+                    X = assignedUdpPort,
+                    Y = 0,
+                    KeyCode = 0,
+                    ClientWidth = 0,
+                    ClientHeight = 0
+                });
             }
         }
         catch (Exception ex)
@@ -212,7 +228,8 @@ public partial class FormClient : Form
 
     private void ReceiveData()
     {
-        byte[] buffer = new byte[65536]; // Large buffer for image data
+        // Thu nhỏ buffer vì luồng TCP này giờ chỉ dùng để lắng nghe ngắt kết nối
+        byte[] buffer = new byte[1024];
 
         try
         {
@@ -224,8 +241,6 @@ public partial class FormClient : Form
                 {
                     break; // Server chủ động đóng kết nối
                 }
-
-                ProcessReceivedData(buffer, bytesRead);
             }
         }
         catch (SocketException)
@@ -243,15 +258,6 @@ public partial class FormClient : Form
         {
             DisconnectFromServer();
         }
-    }
-
-    private void ProcessReceivedData(byte[] buffer, int bytesRead)
-    {
-        // TODO: Process screenshot data
-        // This would typically:
-        // 1. Decompress the image data
-        // 2. Convert to Bitmap
-        // 3. Display in picDesktop
     }
 
     private void DisconnectFromServer()
