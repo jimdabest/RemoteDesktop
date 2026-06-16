@@ -25,7 +25,10 @@ namespace RemoteDesktopServer
         #region Windows Thao Tac Phan Cung API
         [DllImport("user32.dll")]
         private static extern bool SetCursorPos(int X, int Y);
-
+        [DllImport("user32.dll")]
+        private static extern int GetSystemMetrics(int nIndex);
+        private const int SM_CXSCREEN = 0;
+        private const int SM_CYSCREEN = 1;  
         [DllImport("user32.dll")]
         private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, uint dwExtraInfo);
 
@@ -204,23 +207,19 @@ namespace RemoteDesktopServer
         // ==========================================
         private void ExecuteCommand(CommandPacket packet, ClientConnection connection)
         {
-            // 1. Tính toán nội suy tọa độ
             int targetX = packet.X;
             int targetY = packet.Y;
 
-            // Lấy độ phân giải thực tế của màn hình Server
-            int serverWidth = Screen.PrimaryScreen.Bounds.Width;
-            int serverHeight = Screen.PrimaryScreen.Bounds.Height;
+            int serverWidth = GetSystemMetrics(SM_CXSCREEN);
+            int serverHeight = GetSystemMetrics(SM_CYSCREEN);
 
-            // Chỉ tính tam suất nếu Client có gửi thông số khung ảnh (tránh lỗi chia cho 0)
             if (packet.ClientWidth > 0 && packet.ClientHeight > 0)
             {
                 targetX = (packet.X * serverWidth) / packet.ClientWidth;
                 targetY = (packet.Y * serverHeight) / packet.ClientHeight;
-            }
 
-            // 2. Gọi lệnh phần cứng
-            switch (packet.Type)
+                // 2. Gọi lệnh phần cứng
+                switch (packet.Type)
             {
                 case CommandType.RegisterUdpPort:
                     int udpPort = packet.X; // Lấy cái Port mà Client vừa gửi qua

@@ -132,7 +132,16 @@ public partial class FormClient : Form
 
         if (cmdType != CommandType.MouseMove)
         {
-            SendCommand(new CommandPacket { Type = cmdType, X = e.X, Y = e.Y, KeyCode = 0 });
+            // ✅ FIX: Gửi kèm ClientWidth/Height để Server tính tam suất đúng
+            SendCommand(new CommandPacket
+            {
+                Type = cmdType,
+                X = e.X,
+                Y = e.Y,
+                KeyCode = 0,
+                ClientWidth = picDesktop.Width,
+                ClientHeight = picDesktop.Height
+            });
         }
     }
 
@@ -145,7 +154,16 @@ public partial class FormClient : Form
 
         if (cmdType != CommandType.MouseMove)
         {
-            SendCommand(new CommandPacket { Type = cmdType, X = e.X, Y = e.Y, KeyCode = 0 });
+            // ✅ FIX: Gửi kèm ClientWidth/Height để Server tính tam suất đúng
+            SendCommand(new CommandPacket
+            {
+                Type = cmdType,
+                X = e.X,
+                Y = e.Y,
+                KeyCode = 0,
+                ClientWidth = picDesktop.Width,
+                ClientHeight = picDesktop.Height
+            });
         }
     }
 

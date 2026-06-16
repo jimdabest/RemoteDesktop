@@ -4,7 +4,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.InteropServices; // Bắt buộc phải có để dùng DllImport
 using System.Threading;
 using RemoteDesktopShared;
 
@@ -17,6 +17,10 @@ namespace RemoteDesktopServer
         private bool _isStreaming;
         private long _currentFrameId = 0;
         private const int MAX_PAYLOAD_SIZE = 50000; // Giới hạn 50KB
+
+        // Import API của Windows để lấy kích thước màn hình vật lý thực tế (Bỏ qua DPI ảo)
+        [DllImport("user32.dll")]
+        private static extern int GetSystemMetrics(int nIndex);
 
         public ScreenCaster(string clientIp, int clientPort)
         {
@@ -44,17 +48,20 @@ namespace RemoteDesktopServer
                 try
                 {
                     // 1. Chụp màn hình
-                    Rectangle bounds = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
-                    using (Bitmap screenshot = new Bitmap(bounds.Width, bounds.Height))
+                    int screenW = GetSystemMetrics(0); // SM_CXSCREEN
+                    int screenH = GetSystemMetrics(1); // SM_CYSCREEN
+
+                    using (Bitmap screenshot = new Bitmap(screenW, screenH))
                     {
                         using (Graphics g = Graphics.FromImage(screenshot))
                         {
                             // Chụp nền màn hình
-                            g.CopyFromScreen(Point.Empty, Point.Empty, bounds.Size);
+                            g.CopyFromScreen(Point.Empty, Point.Empty, new Size(screenW, screenH));
 
                             // BỔ SUNG MỚI: Vẽ đè con trỏ chuột lên bức ảnh vừa chụp
-                            //Point cursorPos = System.Windows.Forms.Cursor.Position;
-                            //System.Windows.Forms.Cursors.Default.Draw(g, new Rectangle(cursorPos, System.Windows.Forms.Cursors.Default.Size));
+                            // Đã comment lại theo yêu cầu tắt vẽ chuột ở Server
+                            // Point cursorPos = System.Windows.Forms.Cursor.Position;
+                            // System.Windows.Forms.Cursors.Default.Draw(g, new Rectangle(cursorPos, System.Windows.Forms.Cursors.Default.Size));
                         }
 
                         // 2. Ép xung nén ảnh JPEG (Giảm chất lượng xuống 50% để truyền cho mượt)
