@@ -47,20 +47,15 @@ namespace RemoteDesktopServer
             {
                 try
                 {
-                    // 1. Chụp màn hình
+                    // 1. Lấy kích thước màn hình CHUẨN (Nhờ Program.cs đã bật DPI Aware)
                     Rectangle bounds = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
 
-                    using (Bitmap screenshot = new Bitmap(screenW, screenH))
+                    using (Bitmap screenshot = new Bitmap(bounds.Width, bounds.Height))
                     {
                         using (Graphics g = Graphics.FromImage(screenshot))
                         {
-                            // Chụp nền màn hình
-                            g.CopyFromScreen(Point.Empty, Point.Empty, new Size(screenW, screenH));
-
-                            // BỔ SUNG MỚI: Vẽ đè con trỏ chuột lên bức ảnh vừa chụp
-                            // Đã comment lại theo yêu cầu tắt vẽ chuột ở Server
-                            // Point cursorPos = System.Windows.Forms.Cursor.Position;
-                            // System.Windows.Forms.Cursors.Default.Draw(g, new Rectangle(cursorPos, System.Windows.Forms.Cursors.Default.Size));
+                            // Chụp nền màn hình (Giờ sẽ lấy full 100% bao gồm cả Taskbar)
+                            g.CopyFromScreen(Point.Empty, Point.Empty, bounds.Size);
                         }
 
                         // 2. Ép xung nén ảnh JPEG (Giảm chất lượng xuống 50% để truyền cho mượt)
