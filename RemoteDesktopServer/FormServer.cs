@@ -25,15 +25,16 @@ namespace RemoteDesktopServer
         #region Windows Thao Tac Phan Cung API
         [DllImport("user32.dll")]
         private static extern bool SetCursorPos(int X, int Y);
-        [DllImport("user32.dll")]
-        private static extern int GetSystemMetrics(int nIndex);
-        private const int SM_CXSCREEN = 0;
-        private const int SM_CYSCREEN = 1;  
+
         [DllImport("user32.dll")]
         private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, uint dwExtraInfo);
 
         [DllImport("user32.dll")]
         private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, uint dwExtraInfo);
+
+        // ✅ FIX: Import API lấy kích thước màn hình vật lý thực tế
+        [DllImport("user32.dll")]
+        private static extern int GetSystemMetrics(int nIndex);
 
         const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
         const uint MOUSEEVENTF_LEFTUP = 0x0004;
@@ -139,10 +140,6 @@ namespace RemoteDesktopServer
 
                     UpdateClientListUI();
 
-                    //connection.Caster = new ScreenCaster(clientIP, 5001);
-                    //connection.Caster.StartStreaming();
-                    //AppendLog($"[{DateTime.Now:HH:mm:ss}] Started ScreenCaster (UDP: 5001) for {clientIP}");
-
                     Thread clientThread = new Thread(() => HandleClient(connection)) { IsBackground = true };
                     clientThread.Start();
                 }
@@ -157,14 +154,11 @@ namespace RemoteDesktopServer
             }
         }
 
-        // ==========================================
-        // CẬP NHẬT: NHẬN DATA VÀ GIẢI MÃ LỆNH (24 BYTES)
-        // ==========================================
         private void HandleClient(ClientConnection connection)
         {
             try
             {
-                // CẬP NHẬT: Gói tin giờ là 24 bytes (thêm Width và Height)
+                // Gói tin giờ là 24 bytes (thêm Width và Height)
                 byte[] buffer = new byte[24];
 
                 while (isServerRunning && connection.ClientSocket.Connected)
@@ -202,24 +196,26 @@ namespace RemoteDesktopServer
             }
         }
 
-        // ==========================================
-        // CẬP NHẬT: TÍNH TAM SUẤT VÀ THỰC THI LỆNH
-        // ==========================================
         private void ExecuteCommand(CommandPacket packet, ClientConnection connection)
         {
+            // 1. Tính toán nội suy tọa độ
             int targetX = packet.X;
             int targetY = packet.Y;
 
-            int serverWidth = GetSystemMetrics(SM_CXSCREEN);
-            int serverHeight = GetSystemMetrics(SM_CYSCREEN);
+            // ✅ FIX: Dùng GetSystemMetrics thay vì Screen.PrimaryScreen.Bounds để đồng bộ hệ quy chiếu với ảnh chụp
+            int serverWidth = GetSystemMetrics(0); // SM_CXSCREEN (Kích thước vật lý)
+            int serverHeight = GetSystemMetrics(1); // SM_CYSCREEN (Kích thước vật lý)
 
+            // Chỉ tính tam suất nếu Client có gửi thông số khung ảnh (tránh lỗi chia cho 0)
             if (packet.ClientWidth > 0 && packet.ClientHeight > 0)
             {
-                targetX = (packet.X * serverWidth) / packet.ClientWidth;
-                targetY = (packet.Y * serverHeight) / packet.ClientHeight;
+                // ✅ FIX: Ép kiểu double để phép chia không bị mất phần thập phân gây sai số liên tục
+                targetX = (int)Math.Round((double)packet.X * serverWidth / packet.ClientWidth);
+                targetY = (int)Math.Round((double)packet.Y * serverHeight / packet.ClientHeight);
+            }
 
-                // 2. Gọi lệnh phần cứng
-                switch (packet.Type)
+            // 2. Gọi lệnh phần cứng
+            switch (packet.Type)
             {
                 case CommandType.RegisterUdpPort:
                     int udpPort = packet.X; // Lấy cái Port mà Client vừa gửi qua
@@ -228,7 +224,7 @@ namespace RemoteDesktopServer
                     AppendLog($"[{DateTime.Now:HH:mm:ss}] Started ScreenCaster (UDP: {udpPort}) for {connection.IP}");
                     break;
                 case CommandType.MouseMove:
-                    // Dùng tọa độ đã quy đổi để di chuyển chuột
+                    // Dùng tọa độ đã quy đổi chuẩn xác để di chuyển chuột
                     SetCursorPos(targetX, targetY);
                     break;
 
@@ -257,7 +253,7 @@ namespace RemoteDesktopServer
                     break;
 
                 default:
-                    break; // Đã sửa lỗi chữ linh tinh ở đây
+                    break;
             }
         }
 

@@ -132,7 +132,6 @@ public partial class FormClient : Form
 
         if (cmdType != CommandType.MouseMove)
         {
-            // ✅ FIX: Gửi kèm ClientWidth/Height để Server tính tam suất đúng
             SendCommand(new CommandPacket
             {
                 Type = cmdType,
@@ -153,8 +152,7 @@ public partial class FormClient : Form
         else if (e.Button == MouseButtons.Right) cmdType = CommandType.RightMouseUp;
 
         if (cmdType != CommandType.MouseMove)
-        {
-            // ✅ FIX: Gửi kèm ClientWidth/Height để Server tính tam suất đúng
+
             SendCommand(new CommandPacket
             {
                 Type = cmdType,
