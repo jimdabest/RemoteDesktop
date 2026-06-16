@@ -202,14 +202,13 @@ namespace RemoteDesktopServer
             int targetX = packet.X;
             int targetY = packet.Y;
 
-            // ✅ FIX: Dùng GetSystemMetrics thay vì Screen.PrimaryScreen.Bounds để đồng bộ hệ quy chiếu với ảnh chụp
-            int serverWidth = GetSystemMetrics(0); // SM_CXSCREEN (Kích thước vật lý)
-            int serverHeight = GetSystemMetrics(1); // SM_CYSCREEN (Kích thước vật lý)
+            int serverWidth = Screen.PrimaryScreen.Bounds.Width;
+            int serverHeight = Screen.PrimaryScreen.Bounds.Height;
 
             // Chỉ tính tam suất nếu Client có gửi thông số khung ảnh (tránh lỗi chia cho 0)
             if (packet.ClientWidth > 0 && packet.ClientHeight > 0)
             {
-                // ✅ FIX: Ép kiểu double để phép chia không bị mất phần thập phân gây sai số liên tục
+                // FIX: Ép kiểu double để phép chia không bị mất phần thập phân gây sai số liên tục
                 targetX = (int)Math.Round((double)packet.X * serverWidth / packet.ClientWidth);
                 targetY = (int)Math.Round((double)packet.Y * serverHeight / packet.ClientHeight);
             }

@@ -48,8 +48,7 @@ namespace RemoteDesktopServer
                 try
                 {
                     // 1. Chụp màn hình
-                    int screenW = GetSystemMetrics(0); // SM_CXSCREEN
-                    int screenH = GetSystemMetrics(1); // SM_CYSCREEN
+                    Rectangle bounds = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
 
                     using (Bitmap screenshot = new Bitmap(screenW, screenH))
                     {
