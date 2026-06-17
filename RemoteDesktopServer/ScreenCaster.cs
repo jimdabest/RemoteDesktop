@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices; // Bắt buộc phải có để dùng DllImport
 using System.Threading;
+using System.Security.Cryptography;
 using RemoteDesktopShared;
 
 namespace RemoteDesktopServer
@@ -17,6 +18,7 @@ namespace RemoteDesktopServer
         private bool _isStreaming;
         private long _currentFrameId = 0;
         private const int MAX_PAYLOAD_SIZE = 50000; // Giới hạn 50KB
+        private string _lastFrameHash = string.Empty;
 
         // Import API của Windows để lấy kích thước màn hình vật lý thực tế (Bỏ qua DPI ảo)
         [DllImport("user32.dll")]
@@ -43,40 +45,55 @@ namespace RemoteDesktopServer
 
         private void StreamLoop()
         {
-            while (_isStreaming)
+            // Khởi tạo máy băm MD5 một lần duy nhất để dùng lại nhiều lần, giúp tối ưu RAM
+            using (MD5 md5 = MD5.Create())
             {
-                try
+                while (_isStreaming)
                 {
-                    // 1. Lấy kích thước màn hình CHUẨN (Nhờ Program.cs đã bật DPI Aware)
-                    Rectangle bounds = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
-
-                    using (Bitmap screenshot = new Bitmap(bounds.Width, bounds.Height))
+                    try
                     {
-                        using (Graphics g = Graphics.FromImage(screenshot))
+                        Rectangle bounds = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
+
+                        using (Bitmap screenshot = new Bitmap(bounds.Width, bounds.Height))
                         {
-                            // Chụp nền màn hình (Giờ sẽ lấy full 100% bao gồm cả Taskbar)
-                            g.CopyFromScreen(Point.Empty, Point.Empty, bounds.Size);
+                            using (Graphics g = Graphics.FromImage(screenshot))
+                            {
+                                g.CopyFromScreen(Point.Empty, Point.Empty, bounds.Size);
+                            }
+
+                            byte[] imageBytes;
+                            using (MemoryStream ms = new MemoryStream())
+                            {
+                                ImageCodecInfo jpgEncoder = GetEncoder(ImageFormat.Jpeg);
+                                EncoderParameters myEncoderParameters = new EncoderParameters(1);
+                                myEncoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, 50L);
+                                screenshot.Save(ms, jpgEncoder, myEncoderParameters);
+
+                                imageBytes = ms.ToArray();
+                            }
+
+                            // === THUẬT TOÁN DIFFERENTIAL STREAMING (TRUYỀN ẢNH VI SAI) ===
+
+                            // 1. Tạo dấu vân tay cho bức ảnh vừa chụp
+                            byte[] hashBytes = md5.ComputeHash(imageBytes);
+                            string currentHash = BitConverter.ToString(hashBytes);
+
+                            // 2. So sánh vân tay mới với vân tay cũ
+                            if (currentHash != _lastFrameHash)
+                            {
+                                // Có sự thay đổi màn hình -> Tiến hành cắt gói và gửi đi
+                                SendImageChunks(imageBytes);
+
+                                // Cập nhật lại dấu vân tay mới
+                                _lastFrameHash = currentHash;
+                            }
+                            // Nếu dấu vân tay giống nhau -> Màn hình đứng im -> KHÔNG GỬI GÌ CẢ (Tiết kiệm băng thông)
                         }
 
-                        // 2. Ép xung nén ảnh JPEG (Giảm chất lượng xuống 50% để truyền cho mượt)
-                        byte[] imageBytes;
-                        using (MemoryStream ms = new MemoryStream())
-                        {
-                            ImageCodecInfo jpgEncoder = GetEncoder(ImageFormat.Jpeg);
-                            EncoderParameters myEncoderParameters = new EncoderParameters(1);
-                            myEncoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, 50L);
-                            screenshot.Save(ms, jpgEncoder, myEncoderParameters);
-
-                            imageBytes = ms.ToArray();
-                        }
-
-                        // 3. Cắt nhỏ ảnh và bắn đi
-                        SendImageChunks(imageBytes);
+                        Thread.Sleep(30);
                     }
-
-                    Thread.Sleep(30); // Tạm nghỉ để giữ tốc độ khoảng 30 FPS, tránh lag máy
+                    catch { /* Bỏ qua lỗi nếu máy tính đang bận xử lý đồ họa khác */ }
                 }
-                catch { /* Bỏ qua lỗi nếu máy tính đang bận xử lý đồ họa khác */ }
             }
         }
 

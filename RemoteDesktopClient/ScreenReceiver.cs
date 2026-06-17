@@ -4,8 +4,6 @@ using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading;
 using RemoteDesktopShared;
 
 namespace RemoteDesktopClient
@@ -16,8 +14,12 @@ namespace RemoteDesktopClient
         private bool _isListening;
         private Dictionary<long, ImageChunkPacket[]> _frameBuffer = new Dictionary<long, ImageChunkPacket[]>();
 
-        // Sự kiện báo cho Form biết khi ráp xong một bức ảnh
+        // Đây cũng là một Delegate (Action) dùng để báo cáo khi có ảnh mới
         public event Action<Image> OnImageReceived;
+
+        // Giỏ chứa dữ liệu UDP và EndPoint của người gửi
+        private byte[] _buffer = new byte[65536];
+        private EndPoint _remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
 
         public int StartListening(int port)
         {
@@ -26,8 +28,9 @@ namespace RemoteDesktopClient
             _udpSocket.Bind(new IPEndPoint(IPAddress.Any, port));
             _isListening = true;
 
-            Thread listenThread = new Thread(ReceiveLoop) { IsBackground = true };
-            listenThread.Start();
+            // XÓA BỎ THREAD CŨ Ở ĐÂY!
+            // Thay bằng hàm Non-blocking của UDP: BeginReceiveFrom kết hợp Delegate (AsyncCallback)
+            _udpSocket.BeginReceiveFrom(_buffer, 0, _buffer.Length, SocketFlags.None, ref _remoteEndPoint, new AsyncCallback(ReceiveCallback), null);
 
             return ((IPEndPoint)_udpSocket.LocalEndPoint).Port;
         }
@@ -38,37 +41,43 @@ namespace RemoteDesktopClient
             _udpSocket?.Close();
         }
 
-        private void ReceiveLoop()
+        // Hàm Delegate Callback sẽ được Windows tự động gọi khi có gói tin UDP bay tới
+        private void ReceiveCallback(IAsyncResult ar)
         {
-            EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
-            byte[] buffer = new byte[65536]; // Buffer đủ to để chứa 1 mảnh cắt (chunk)
+            if (!_isListening) return;
 
-            while (_isListening)
+            try
             {
-                try
-                {
-                    // Lắng nghe gói tin UDP
-                    int receivedBytes = _udpSocket.ReceiveFrom(buffer, ref remoteEndPoint);
+                // 1. Chốt lại xem nhận được bao nhiêu bytes
+                int receivedBytes = _udpSocket.EndReceiveFrom(ar, ref _remoteEndPoint);
 
-                    ImageChunkPacket chunk = ImageChunkPacket.FromBytes(buffer, receivedBytes);
+                if (receivedBytes > 0)
+                {
+                    // 2. Giải mã và ráp ảnh
+                    ImageChunkPacket chunk = ImageChunkPacket.FromBytes(_buffer, receivedBytes);
                     ProcessChunk(chunk);
                 }
-                catch { /* Bỏ qua nếu có gói tin bị rớt */ }
+            }
+            catch { /* Bỏ qua nếu có gói tin bị rớt do lỗi mạng */ }
+            finally
+            {
+                // 3. Tiếp tục giăng lưới Non-blocking để nghe gói tin tiếp theo
+                if (_isListening)
+                {
+                    _udpSocket.BeginReceiveFrom(_buffer, 0, _buffer.Length, SocketFlags.None, ref _remoteEndPoint, new AsyncCallback(ReceiveCallback), null);
+                }
             }
         }
 
         private void ProcessChunk(ImageChunkPacket chunk)
         {
-            // Khởi tạo mảng hứng ảnh nếu đây là frame mới
             if (!_frameBuffer.ContainsKey(chunk.FrameId))
             {
                 _frameBuffer[chunk.FrameId] = new ImageChunkPacket[chunk.TotalChunks];
             }
 
-            // Gắn mảnh ghép vào đúng vị trí
             _frameBuffer[chunk.FrameId][chunk.ChunkIndex] = chunk;
 
-            // Kiểm tra xem đã nhận đủ tất cả các mảnh của frame này chưa
             bool isComplete = true;
             foreach (var p in _frameBuffer[chunk.FrameId])
             {
@@ -106,7 +115,6 @@ namespace RemoteDesktopClient
             }
             catch { /* File bị lỗi do bit mạng lật, bỏ qua bức ảnh này */ }
 
-            // Dọn dẹp RAM: Xóa ảnh đã ráp xong và các mảnh rác quá cũ
             _frameBuffer.Remove(frameId);
             var oldKeys = new List<long>();
             foreach (var key in _frameBuffer.Keys)

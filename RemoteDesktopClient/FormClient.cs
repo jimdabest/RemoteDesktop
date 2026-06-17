@@ -219,7 +219,7 @@ public partial class FormClient : Form
                 screenReceiver = new ScreenReceiver();
                 screenReceiver.OnImageReceived += UpdateDesktopImage;
 
-                int assignedUdpPort = screenReceiver.StartListening(0);
+                int assignedUdpPort = screenReceiver.StartListening(5001);
 
                 SendCommand(new CommandPacket
                 {
@@ -250,11 +250,9 @@ public partial class FormClient : Form
 
         try
         {
-            // Lấy lại giỏ dữ liệu và Socket từ tham số truyền vào
             ClientStateObject state = (ClientStateObject)ar.AsyncState;
             Socket socket = state.WorkSocket;
 
-            // Chốt số byte nhận được
             int bytesRead = socket.EndReceive(ar);
 
             if (bytesRead > 0)
@@ -353,7 +351,6 @@ public partial class FormClient : Form
     }
     #endregion
 
-    // Thêm class này vào dưới cùng của file FormClient.cs
     public class ClientStateObject
     {
         public Socket WorkSocket { get; set; }

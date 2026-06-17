@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-// using System.Data; // Đã comment lại để tránh lỗi đụng độ CommandType
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -166,7 +165,6 @@ namespace RemoteDesktopServer
                 {
                     try
                     {
-                        // ĐÃ MỞ COMMENT: Dịch mã mảng byte thành gói tin và Thực thi
                         CommandPacket packet = CommandPacket.FromBytes(state.Buffer, bytesRead);
                         ExecuteCommand(packet, state.Connection);
                     }
@@ -176,8 +174,6 @@ namespace RemoteDesktopServer
                     }
                     finally
                     {
-                        // QUAN TRỌNG NHẤT: Bắt buộc phải đặt lưới lắng nghe lại trong block finally
-                        // Để đảm bảo dù lệnh có giải mã lỗi, Server vẫn tiếp tục nghe chứ không bị "điếc"
                         Array.Clear(state.Buffer, 0, state.Buffer.Length);
                         clientSocket.BeginReceive(state.Buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
                     }
