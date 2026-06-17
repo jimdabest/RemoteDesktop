@@ -163,7 +163,6 @@ public partial class FormClient : Form
                 ClientHeight = picDesktop.Height
             });
         }
-    }
 
     private void FormClient_KeyDown(object? sender, KeyEventArgs e)
     {
