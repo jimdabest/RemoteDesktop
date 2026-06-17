@@ -43,7 +43,7 @@ namespace RemoteDesktopShared
         }
 
         // Ham giai ma du lieu tu mang byte[] ve CommandPacket
-        public static CommandPacket FromBytes(byte[] data)
+        public static CommandPacket FromBytes(byte[] data, int length)
         {
             using (MemoryStream ms = new MemoryStream(data))
             using (BinaryReader reader = new BinaryReader(ms))

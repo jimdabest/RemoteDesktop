@@ -230,6 +230,9 @@ public partial class FormClient : Form
                     ClientWidth = 0,
                     ClientHeight = 0
                 });
+
+                ClientStateObject state = new ClientStateObject { WorkSocket = clientSocket };
+                clientSocket.BeginReceive(state.Buffer, 0, ClientStateObject.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
             }
         }
         catch (Exception ex)
@@ -241,36 +244,46 @@ public partial class FormClient : Form
         }
     }
 
-    private void ReceiveData()
+    private void ReceiveCallback(IAsyncResult ar)
     {
-        // Thu nhỏ buffer vì luồng TCP này giờ chỉ dùng để lắng nghe ngắt kết nối
-        byte[] buffer = new byte[1024];
+        if (!isConnected) return;
 
         try
         {
-            while (isConnected && clientSocket != null)
+            // Lấy lại giỏ dữ liệu và Socket từ tham số truyền vào
+            ClientStateObject state = (ClientStateObject)ar.AsyncState;
+            Socket socket = state.WorkSocket;
+
+            // Chốt số byte nhận được
+            int bytesRead = socket.EndReceive(ar);
+
+            if (bytesRead > 0)
             {
-                // Đọc dữ liệu trực tiếp bằng Socket
-                int bytesRead = clientSocket.Receive(buffer);
-                if (bytesRead == 0)
-                {
-                    break; // Server chủ động đóng kết nối
-                }
+                // Nếu sau này Server có gửi lệnh TCP ngược lại Client (vd: chat văn bản), 
+                // ta sẽ giải mã state.Buffer ở đây.
+                // Hiện tại Client chỉ gửi chứ không nhận lệnh, nên ta chỉ xóa giỏ và nghe tiếp.
+
+                Array.Clear(state.Buffer, 0, bytesRead);
+                socket.BeginReceive(state.Buffer, 0, ClientStateObject.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
+            }
+            else
+            {
+                // Nếu số byte nhận được = 0, nghĩa là Server đã chủ động bấm nút Stop
+                DisconnectFromServer();
             }
         }
         catch (SocketException)
         {
-            // Mất kết nối mạng
+            // Lỗi rớt mạng hoặc Server bị crash đột ngột
+            DisconnectFromServer();
         }
+        catch (ObjectDisposedException) { /* Bỏ qua nếu Client vừa bấm Disconnect xong */ }
         catch (Exception ex)
         {
             UpdateUI(() =>
             {
                 MessageBox.Show($"Error receiving data: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             });
-        }
-        finally
-        {
             DisconnectFromServer();
         }
     }
@@ -339,4 +352,12 @@ public partial class FormClient : Form
         else action();
     }
     #endregion
+
+    // Thêm class này vào dưới cùng của file FormClient.cs
+    public class ClientStateObject
+    {
+        public Socket WorkSocket { get; set; }
+        public const int BufferSize = 1024;
+        public byte[] Buffer = new byte[BufferSize];
+    }
 }

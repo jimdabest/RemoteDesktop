@@ -68,8 +68,7 @@ namespace RemoteDesktopServer
 
                 AppendLog($"[{DateTime.Now:HH:mm:ss}] Server started on port {port}");
 
-                listenerThread = new Thread(AcceptConnections) { IsBackground = true };
-                listenerThread.Start();
+                serverSocket.BeginAccept(new AsyncCallback(AcceptCallback), null);
             }
             catch (Exception ex)
             {
@@ -78,6 +77,47 @@ namespace RemoteDesktopServer
                 isServerRunning = false;
                 btnStart.Enabled = true;
                 btnStop.Enabled = false;
+            }
+        }
+
+        private void AcceptCallback(IAsyncResult ar)
+        {
+            if (!isServerRunning) return;
+
+            try
+            {
+                // 1. Kết thúc quá trình Accept và lấy ra Socket của Client
+                Socket clientSocket = serverSocket.EndAccept(ar);
+
+                // 2. NGAY LẬP TỨC đặt bẫy chờ Client tiếp theo (để Server không bị điếc)
+                serverSocket.BeginAccept(new AsyncCallback(AcceptCallback), null);
+
+                // 3. Khởi tạo kết nối cho Client hiện tại
+                IPEndPoint remoteIpEndPoint = clientSocket.RemoteEndPoint as IPEndPoint;
+                ClientConnection connection = new ClientConnection
+                {
+                    ClientSocket = clientSocket,
+                    IP = remoteIpEndPoint.Address.ToString(),
+                    Port = remoteIpEndPoint.Port,
+                    ConnectedTime = DateTime.Now
+                };
+
+                connectedClients.Add(connection);
+                AppendLog($"[{DateTime.Now:HH:mm:ss}] Client connected: {connection.IP}:{connection.Port}");
+                UpdateClientListUI();
+
+                // Bật luồng UDP (ScreenCaster) như cũ
+                connection.Caster = new ScreenCaster(connection.IP, 5001);
+                connection.Caster.StartStreaming();
+
+                // 4. CHĂNG LƯỚI NHẬN DỮ LIỆU TỪ CLIENT NÀY BẤT ĐỒNG BỘ
+                StateObject state = new StateObject { Connection = connection };
+                clientSocket.BeginReceive(state.Buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
+            }
+            catch (ObjectDisposedException) { /* Bỏ qua khi Server tắt */ }
+            catch (Exception ex)
+            {
+                AppendLog($"[{DateTime.Now:HH:mm:ss}] Error in Accept: {ex.Message}");
             }
         }
 
@@ -111,85 +151,65 @@ namespace RemoteDesktopServer
             }
         }
 
-        private void AcceptConnections()
+        private void ReceiveCallback(IAsyncResult ar)
         {
-            while (isServerRunning)
-            {
-                try
-                {
-                    Socket clientSocket = serverSocket.Accept();
-                    IPEndPoint remoteIpEndPoint = (IPEndPoint)clientSocket.RemoteEndPoint;
+            if (!isServerRunning) return;
 
-                    string clientIP = remoteIpEndPoint.Address.ToString();
-                    int clientPort = remoteIpEndPoint.Port;
+            StateObject state = (StateObject)ar.AsyncState;
+            Socket clientSocket = state.Connection.ClientSocket;
 
-                    ClientConnection connection = new ClientConnection
-                    {
-                        ClientSocket = clientSocket,
-                        IP = clientIP,
-                        Port = clientPort,
-                        ConnectedTime = DateTime.Now
-                    };
-
-                    connectedClients.Add(connection);
-                    AppendLog($"[{DateTime.Now:HH:mm:ss}] Client connected: {clientIP}:{clientPort}");
-
-                    UpdateClientListUI();
-
-                    Thread clientThread = new Thread(() => HandleClient(connection)) { IsBackground = true };
-                    clientThread.Start();
-                }
-                catch (SocketException)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    AppendLog($"[{DateTime.Now:HH:mm:ss}] Error accepting connection: {ex.Message}");
-                }
-            }
-        }
-
-        private void HandleClient(ClientConnection connection)
-        {
             try
             {
-                // Gói tin giờ là 24 bytes (thêm Width và Height)
-                byte[] buffer = new byte[24];
+                int bytesRead = clientSocket.EndReceive(ar);
 
-                while (isServerRunning && connection.ClientSocket.Connected)
+                if (bytesRead > 0)
                 {
-                    int bytesRead = 0;
-
-                    // Đảm bảo nhận đủ 24 bytes dữ liệu thô
-                    while (bytesRead < 24)
+                    try
                     {
-                        int read = connection.ClientSocket.Receive(buffer, bytesRead, 24 - bytesRead, SocketFlags.None);
-                        if (read == 0) return;
-                        bytesRead += read;
+                        // ĐÃ MỞ COMMENT: Dịch mã mảng byte thành gói tin và Thực thi
+                        CommandPacket packet = CommandPacket.FromBytes(state.Buffer, bytesRead);
+                        ExecuteCommand(packet, state.Connection);
                     }
-
-                    CommandPacket packet = CommandPacket.FromBytes(buffer);
-                    ExecuteCommand(packet, connection);
+                    catch
+                    {
+                        // Bắt lỗi ở đây để ứng dụng không bị văng nếu TCP dồn cục gây sai cấu trúc byte
+                    }
+                    finally
+                    {
+                        // QUAN TRỌNG NHẤT: Bắt buộc phải đặt lưới lắng nghe lại trong block finally
+                        // Để đảm bảo dù lệnh có giải mã lỗi, Server vẫn tiếp tục nghe chứ không bị "điếc"
+                        Array.Clear(state.Buffer, 0, state.Buffer.Length);
+                        clientSocket.BeginReceive(state.Buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
+                    }
+                }
+                else
+                {
+                    DisconnectClient(state.Connection);
                 }
             }
             catch (SocketException)
             {
-                // Bỏ qua khi mất kết nối đột ngột
+                DisconnectClient(state.Connection);
             }
+            catch (ObjectDisposedException) { /* Socket đã đóng */ }
             catch (Exception ex)
             {
-                AppendLog($"[{DateTime.Now:HH:mm:ss}] Error handling client {connection.IP}: {ex.Message}");
+                AppendLog($"[{DateTime.Now:HH:mm:ss}] Error receiving: {ex.Message}");
             }
-            finally
-            {
-                connection.Caster?.StopStreaming();
-                try { connection.ClientSocket?.Shutdown(SocketShutdown.Both); } catch { }
-                connection.ClientSocket?.Close();
-                connectedClients.Remove(connection);
-                AppendLog($"[{DateTime.Now:HH:mm:ss}] Client disconnected: {connection.IP}:{connection.Port}");
-                UpdateClientListUI();
-            }
+        }
+
+        private void DisconnectClient(ClientConnection connection)
+        {
+            if (connection == null || !connectedClients.Contains(connection)) return;
+
+            connection.Caster?.StopStreaming(); // Tắt gửi hình
+
+            try { connection.ClientSocket?.Shutdown(SocketShutdown.Both); } catch { }
+            connection.ClientSocket?.Close();
+
+            connectedClients.Remove(connection);
+            AppendLog($"[{DateTime.Now:HH:mm:ss}] Client disconnected: {connection.IP}:{connection.Port}");
+            UpdateClientListUI();
         }
 
         private void ExecuteCommand(CommandPacket packet, ClientConnection connection)
@@ -212,12 +232,6 @@ namespace RemoteDesktopServer
             // 2. Gọi lệnh phần cứng
             switch (packet.Type)
             {
-                case CommandType.RegisterUdpPort:
-                    int udpPort = packet.X; // Lấy cái Port mà Client vừa gửi qua
-                    connection.Caster = new ScreenCaster(connection.IP, udpPort);
-                    connection.Caster.StartStreaming();
-                    AppendLog($"[{DateTime.Now:HH:mm:ss}] Started ScreenCaster (UDP: {udpPort}) for {connection.IP}");
-                    break;
                 case CommandType.MouseMove:
                     // Dùng tọa độ đã quy đổi chuẩn xác để di chuyển chuột
                     SetCursorPos(targetX, targetY);
@@ -320,5 +334,13 @@ namespace RemoteDesktopServer
         public int Port { get; set; }
         public DateTime ConnectedTime { get; set; }
         public ScreenCaster Caster { get; set; }
+    }
+
+    // Class dùng để chứa dữ liệu truyền đi giữa các hàm Callback của TCP
+    public class StateObject
+    {
+        public ClientConnection Connection { get; set; }
+        public const int BufferSize = 65536; // Giỏ chứa 64KB
+        public byte[] Buffer = new byte[BufferSize];
     }
 }
