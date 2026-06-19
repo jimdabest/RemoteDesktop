@@ -210,55 +210,42 @@ namespace RemoteDesktopServer
 
         private void ExecuteCommand(CommandPacket packet, ClientConnection connection)
         {
-            // 1. Tính toán nội suy tọa độ
+            if (packet.Type == CommandType.ChangeQuality)
+            {
+                if (connection.Caster != null) connection.Caster.ImageQuality = packet.X;
+                return;
+            }
+            else if (packet.Type == CommandType.ChangeCompression)
+            {
+                if (connection.Caster != null)
+                {
+                    // Ép kiểu ngược lại từ % về float (vd: 75 -> 0.75f)
+                    connection.Caster.ImageScale = packet.X / 100f;
+                }
+                return;
+            }
+
             int targetX = packet.X;
             int targetY = packet.Y;
 
             int serverWidth = Screen.PrimaryScreen.Bounds.Width;
             int serverHeight = Screen.PrimaryScreen.Bounds.Height;
 
-            // Chỉ tính tam suất nếu Client có gửi thông số khung ảnh (tránh lỗi chia cho 0)
             if (packet.ClientWidth > 0 && packet.ClientHeight > 0)
             {
-                // FIX: Ép kiểu double để phép chia không bị mất phần thập phân gây sai số liên tục
                 targetX = (int)Math.Round((double)packet.X * serverWidth / packet.ClientWidth);
                 targetY = (int)Math.Round((double)packet.Y * serverHeight / packet.ClientHeight);
             }
 
-            // 2. Gọi lệnh phần cứng
             switch (packet.Type)
             {
-                case CommandType.MouseMove:
-                    // Dùng tọa độ đã quy đổi chuẩn xác để di chuyển chuột
-                    SetCursorPos(targetX, targetY);
-                    break;
-
-                case CommandType.LeftMouseDown:
-                    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-                    break;
-
-                case CommandType.LeftMouseUp:
-                    mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-                    break;
-
-                case CommandType.RightMouseDown:
-                    mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
-                    break;
-
-                case CommandType.RightMouseUp:
-                    mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
-                    break;
-
-                case CommandType.KeyDown:
-                    keybd_event((byte)packet.KeyCode, 0, 0, 0);
-                    break;
-
-                case CommandType.KeyUp:
-                    keybd_event((byte)packet.KeyCode, 0, KEYEVENTF_KEYUP, 0);
-                    break;
-
-                default:
-                    break;
+                case CommandType.MouseMove: SetCursorPos(targetX, targetY); break;
+                case CommandType.LeftMouseDown: mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); break;
+                case CommandType.LeftMouseUp: mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); break;
+                case CommandType.RightMouseDown: mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0); break;
+                case CommandType.RightMouseUp: mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0); break;
+                case CommandType.KeyDown: keybd_event((byte)packet.KeyCode, 0, 0, 0); break;
+                case CommandType.KeyUp: keybd_event((byte)packet.KeyCode, 0, KEYEVENTF_KEYUP, 0); break;
             }
         }
 

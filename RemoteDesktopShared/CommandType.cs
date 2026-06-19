@@ -15,6 +15,8 @@ namespace RemoteDesktopShared
         RightMouseUp,
         KeyDown,
         KeyUp,
-        RegisterUdpPort
+        RegisterUdpPort,
+        ChangeQuality,       
+        ChangeCompression 
     }
 }

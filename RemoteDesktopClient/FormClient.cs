@@ -12,6 +12,11 @@ public partial class FormClient : Form
     private Thread? receiveThread;
     private Stopwatch latencyStopwatch = new();
     private ScreenReceiver screenReceiver;
+    private int currentQuality = 50;
+    private int settingQuality = 50;
+    private int settingCompression = 0; // 0: Low, 1: Med, 2: High
+    private int settingInput = 0;       // 0: Full Control, 1: View Only
+    private PictureBoxSizeMode settingDisplay = PictureBoxSizeMode.StretchImage;
     #endregion
 
     #region 2. Constructor & Initialization
@@ -93,10 +98,31 @@ public partial class FormClient : Form
 
     private void btnSettings_Click(object sender, EventArgs e)
     {
-        MessageBox.Show("Settings window will be implemented.\n\nAvailable options:\n- Image quality\n- Compression level\n- Input method\n- Display settings",
-            "Settings",
-            MessageBoxButtons.OK,
-            MessageBoxIcon.Information);
+        using (var frmSettings = new FormSettings(settingQuality, settingCompression, settingInput, settingDisplay))
+        {
+            if (frmSettings.ShowDialog() == DialogResult.OK)
+            {
+                // Lưu state
+                settingQuality = frmSettings.Quality;
+                settingCompression = frmSettings.CompressionLevel;
+                settingInput = frmSettings.InputMethod;
+                settingDisplay = frmSettings.DisplayMode;
+
+                // Áp dụng ngay Display Settings cho PictureBox
+                picDesktop.SizeMode = settingDisplay;
+
+                // Gửi cấu hình về Server (nếu đang kết nối)
+                if (isConnected)
+                {
+                    // Lệnh 1: Gửi Quality
+                    SendCommand(new CommandPacket { Type = CommandType.ChangeQuality, X = settingQuality, Y = 0, KeyCode = 0, ClientWidth = 0, ClientHeight = 0 });
+
+                    // Lệnh 2: Gửi Compression Scale (Low=100%, Med=75%, High=50%)
+                    int scalePercent = settingCompression == 0 ? 100 : (settingCompression == 1 ? 75 : 50);
+                    SendCommand(new CommandPacket { Type = CommandType.ChangeCompression, X = scalePercent, Y = 0, KeyCode = 0, ClientWidth = 0, ClientHeight = 0 });
+                }
+            }
+        }
     }
 
     private void Form1_FormClosing(object sender, FormClosingEventArgs e)

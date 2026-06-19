@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices; // Bắt buộc phải có để dùng DllImport
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Security.Cryptography;
 using RemoteDesktopShared;
@@ -17,10 +18,13 @@ namespace RemoteDesktopServer
         private IPEndPoint _clientEndPoint;
         private bool _isStreaming;
         private long _currentFrameId = 0;
-        private const int MAX_PAYLOAD_SIZE = 50000; // Giới hạn 50KB
+        private const int MAX_PAYLOAD_SIZE = 50000;
         private string _lastFrameHash = string.Empty;
 
-        // Import API của Windows để lấy kích thước màn hình vật lý thực tế (Bỏ qua DPI ảo)
+        // Các biến cấu hình từ Settings
+        public long ImageQuality { get; set; } = 50L;
+        public float ImageScale { get; set; } = 1.0f; // 1.0 (Low), 0.75 (Medium), 0.5 (High)
+
         [DllImport("user32.dll")]
         private static extern int GetSystemMetrics(int nIndex);
 
@@ -45,7 +49,6 @@ namespace RemoteDesktopServer
 
         private void StreamLoop()
         {
-            // Khởi tạo máy băm MD5 một lần duy nhất để dùng lại nhiều lần, giúp tối ưu RAM
             using (MD5 md5 = MD5.Create())
             {
                 while (_isStreaming)
@@ -66,38 +69,42 @@ namespace RemoteDesktopServer
                             {
                                 ImageCodecInfo jpgEncoder = GetEncoder(ImageFormat.Jpeg);
                                 EncoderParameters myEncoderParameters = new EncoderParameters(1);
-                                myEncoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, 50L);
-                                screenshot.Save(ms, jpgEncoder, myEncoderParameters);
+                                myEncoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, ImageQuality);
+
+                                // Xử lý Compression Level (Scale ảnh)
+                                if (ImageScale < 1.0f)
+                                {
+                                    int newW = (int)(bounds.Width * ImageScale);
+                                    int newH = (int)(bounds.Height * ImageScale);
+                                    using (Bitmap resizedBmp = new Bitmap(screenshot, new Size(newW, newH)))
+                                    {
+                                        resizedBmp.Save(ms, jpgEncoder, myEncoderParameters);
+                                    }
+                                }
+                                else
+                                {
+                                    screenshot.Save(ms, jpgEncoder, myEncoderParameters);
+                                }
 
                                 imageBytes = ms.ToArray();
                             }
 
-                            // === THUẬT TOÁN DIFFERENTIAL STREAMING (TRUYỀN ẢNH VI SAI) ===
-
-                            // 1. Tạo dấu vân tay cho bức ảnh vừa chụp
                             byte[] hashBytes = md5.ComputeHash(imageBytes);
                             string currentHash = BitConverter.ToString(hashBytes);
 
-                            // 2. So sánh vân tay mới với vân tay cũ
                             if (currentHash != _lastFrameHash)
                             {
-                                // Có sự thay đổi màn hình -> Tiến hành cắt gói và gửi đi
                                 SendImageChunks(imageBytes);
-
-                                // Cập nhật lại dấu vân tay mới
                                 _lastFrameHash = currentHash;
                             }
-                            // Nếu dấu vân tay giống nhau -> Màn hình đứng im -> KHÔNG GỬI GÌ CẢ (Tiết kiệm băng thông)
                         }
-
                         Thread.Sleep(30);
                     }
-                    catch { /* Bỏ qua lỗi nếu máy tính đang bận xử lý đồ họa khác */ }
+                    catch { /* Bỏ qua lỗi đồ họa */ }
                 }
             }
         }
 
-        // Hàm hỗ trợ tìm bộ giải mã JPEG của Windows
         private ImageCodecInfo GetEncoder(ImageFormat format)
         {
             ImageCodecInfo[] codecs = ImageCodecInfo.GetImageDecoders();
@@ -128,8 +135,7 @@ namespace RemoteDesktopServer
                     Payload = chunkData
                 };
 
-                byte[] sendBytes = packet.ToBytes();
-                _udpSocket.SendTo(sendBytes, _clientEndPoint);
+                _udpSocket.SendTo(packet.ToBytes(), _clientEndPoint);
             }
         }
     }
