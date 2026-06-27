@@ -20,6 +20,7 @@ namespace RemoteDesktopServer
         private bool isServerRunning = false;
         private Thread listenerThread;
         private List<ClientConnection> connectedClients = new List<ClientConnection>();
+        private int _serverPIN;
 
         #region Windows Thao Tac Phan Cung API
         [DllImport("user32.dll")]
@@ -31,6 +32,9 @@ namespace RemoteDesktopServer
         [DllImport("user32.dll")]
         private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, uint dwExtraInfo);
 
+        const uint MOUSEEVENTF_MOVE = 0x0001;
+        const uint MOUSEEVENTF_ABSOLUTE = 0x8000;
+        const uint MOUSEEVENTF_WHEEL = 0x0800;
         const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
         const uint MOUSEEVENTF_LEFTUP = 0x0004;
         const uint MOUSEEVENTF_RIGHTDOWN = 0x0008;
@@ -58,6 +62,35 @@ namespace RemoteDesktopServer
                 serverSocket.Listen(100);
 
                 isServerRunning = true;
+
+                string userTyped = txtServerPIN.Text.Trim();
+
+                if (string.IsNullOrEmpty(userTyped))
+                {
+                    // TRƯỜNG HỢP 1: Người dùng để trống -> Tự sinh ngẫu nhiên 4 số
+                    Random rnd = new Random();
+                    _serverPIN = rnd.Next(1000, 9999);
+                }
+                else
+                {
+                    // TRƯỜNG HỢP 2: Người dùng có tự gõ -> Kiểm tra xem họ gõ chữ hay gõ số
+                    if (int.TryParse(userTyped, out int customNumber))
+                    {
+                        _serverPIN = customNumber; // Lấy luôn số họ vừa gõ làm PIN
+                    }
+                    else
+                    {
+                        MessageBox.Show("Auto convert to random PIN", "Incorrect format", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        Random rnd = new Random();
+                        _serverPIN = rnd.Next(1000, 9999);
+                    }
+                }
+
+                // Cập nhật ngược lại con số vừa chốt vào ô TextBox cho Host nhìn thấy
+                txtServerPIN.Text = _serverPIN.ToString();
+                txtServerPIN.Enabled = false; // Khóa ô nhập lại! Không cho sửa PIN khi Server đang chạy
+
+                this.Text = $"Remote Desktop Server [PIN: {_serverPIN}]";
 
                 btnStart.Enabled = false;
                 btnStop.Enabled = true;
@@ -105,10 +138,6 @@ namespace RemoteDesktopServer
                 AppendLog($"[{DateTime.Now:HH:mm:ss}] Client connected: {connection.IP}:{connection.Port}");
                 UpdateClientListUI();
 
-                // Bật luồng UDP (ScreenCaster) như cũ
-                connection.Caster = new ScreenCaster(connection.IP, 5001);
-                connection.Caster.StartStreaming();
-
                 // 4. CHĂNG LƯỚI NHẬN DỮ LIỆU TỪ CLIENT NÀY BẤT ĐỒNG BỘ
                 StateObject state = new StateObject { Connection = connection };
                 clientSocket.BeginReceive(state.Buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
@@ -141,6 +170,7 @@ namespace RemoteDesktopServer
                 lblStatusValue.Text = "Offline";
                 lblStatusValue.ForeColor = Color.Red;
                 lvClients.Items.Clear();
+                txtServerPIN.Enabled = true;
 
                 AppendLog($"[{DateTime.Now:HH:mm:ss}] Server stopped");
             }
@@ -224,6 +254,7 @@ namespace RemoteDesktopServer
                 }
                 return;
             }
+            if (!connection.IsAuthenticated && packet.Type != CommandType.Login) return;
 
             int targetX = packet.X;
             int targetY = packet.Y;
@@ -239,7 +270,41 @@ namespace RemoteDesktopServer
 
             switch (packet.Type)
             {
-                case CommandType.MouseMove: SetCursorPos(targetX, targetY); break;
+                case CommandType.Login:
+                    if (packet.X == _serverPIN)
+                    {
+                        connection.IsAuthenticated = true;
+                        AppendLog($"[{DateTime.Now:HH:mm:ss}] Client {connection.IP} authentication successful!");
+
+                        CommandPacket reply = new CommandPacket { Type = CommandType.LoginResult, X = 1 };
+                        connection.ClientSocket.Send(reply.ToBytes());
+                    }
+                    else
+                    {
+                        AppendLog($"[{DateTime.Now:HH:mm:ss}] Client {connection.IP} received an incorrect PIN ({packet.X}). Reject!");
+                        CommandPacket reply = new CommandPacket { Type = CommandType.LoginResult, X = 0 };
+                        connection.ClientSocket.Send(reply.ToBytes());
+                        DisconnectClient(connection);
+                    }
+                    break;
+                case CommandType.RegisterUdpPort:
+                    int clientUdpPort = packet.X; // Port UDP mà Client vừa mở gửi sang
+                    connection.Caster = new ScreenCaster(connection.IP, clientUdpPort);
+
+                    // Gán ngay các thông số cài đặt ban đầu cho Caster
+                    connection.Caster.StartStreaming();
+                    AppendLog($"[{DateTime.Now:HH:mm:ss}] The ScreenCaster UDP stream has connected to the port {clientUdpPort}");
+                    break;
+                case CommandType.MouseMove:
+                    // Quy đổi tọa độ pixel (targetX, targetY) sang hệ tọa độ tuyệt đối (0 -> 65535)
+                    uint absX = (uint)((targetX * 65535) / serverWidth);
+                    uint absY = (uint)((targetY * 65535) / serverHeight);
+
+                    mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, absX, absY, 0, 0);
+                    break;
+                case CommandType.MouseWheel:
+                    mouse_event(MOUSEEVENTF_WHEEL, 0, 0, (uint)packet.KeyCode, 0);
+                    break;
                 case CommandType.LeftMouseDown: mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); break;
                 case CommandType.LeftMouseUp: mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); break;
                 case CommandType.RightMouseDown: mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0); break;
@@ -317,6 +382,7 @@ namespace RemoteDesktopServer
         public int Port { get; set; }
         public DateTime ConnectedTime { get; set; }
         public ScreenCaster Caster { get; set; }
+        public bool IsAuthenticated { get; set; } = false;
     }
 
     // Class dùng để chứa dữ liệu truyền đi giữa các hàm Callback của TCP

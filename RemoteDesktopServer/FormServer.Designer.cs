@@ -50,6 +50,8 @@
             this.tabLogs = new System.Windows.Forms.TabPage();
             this.btnClearLogs = new System.Windows.Forms.Button();
             this.txtLogs = new System.Windows.Forms.TextBox();
+            this.txtServerPIN = new System.Windows.Forms.TextBox();
+            this.lblServerPIN = new System.Windows.Forms.Label();
             this.panelHeader.SuspendLayout();
             this.panelControl.SuspendLayout();
             this.panelStatus.SuspendLayout();
@@ -82,6 +84,8 @@
             // panelControl
             // 
             this.panelControl.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.panelControl.Controls.Add(this.lblServerPIN);
+            this.panelControl.Controls.Add(this.txtServerPIN);
             this.panelControl.Controls.Add(this.btnStop);
             this.panelControl.Controls.Add(this.btnStart);
             this.panelControl.Controls.Add(this.lblPort);
@@ -292,6 +296,23 @@
             this.txtLogs.Size = new System.Drawing.Size(886, 298);
             this.txtLogs.TabIndex = 0;
             // 
+            // txtServerPIN
+            // 
+            this.txtServerPIN.Location = new System.Drawing.Point(365, 46);
+            this.txtServerPIN.Name = "txtServerPIN";
+            this.txtServerPIN.Size = new System.Drawing.Size(100, 25);
+            this.txtServerPIN.TabIndex = 4;
+            // 
+            // lblServerPIN
+            // 
+            this.lblServerPIN.AutoSize = true;
+            this.lblServerPIN.Font = new System.Drawing.Font("Arial", 10F);
+            this.lblServerPIN.Location = new System.Drawing.Point(320, 48);
+            this.lblServerPIN.Name = "lblServerPIN";
+            this.lblServerPIN.Size = new System.Drawing.Size(41, 19);
+            this.lblServerPIN.TabIndex = 5;
+            this.lblServerPIN.Text = "PIN:";
+            // 
             // FormServer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
@@ -346,6 +367,8 @@
         private System.Windows.Forms.TabPage tabLogs;
         private System.Windows.Forms.TextBox txtLogs;
         private System.Windows.Forms.Button btnClearLogs;
+        private System.Windows.Forms.Label lblServerPIN;
+        private System.Windows.Forms.TextBox txtServerPIN;
     }
 }
 

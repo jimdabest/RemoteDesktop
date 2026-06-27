@@ -12,6 +12,7 @@ public partial class FormClient : Form
     private Thread? receiveThread;
     private Stopwatch latencyStopwatch = new();
     private ScreenReceiver screenReceiver;
+    private int targetPIN = 0;
     private int currentQuality = 50;
     private int settingQuality = 50;
     private int settingCompression = 0; // 0: Low, 1: Med, 2: High
@@ -34,6 +35,9 @@ public partial class FormClient : Form
 
         this.KeyDown += FormClient_KeyDown;
         this.KeyUp += FormClient_KeyUp;
+
+        picDesktop.MouseWheel += PicDesktop_MouseWheel;
+        picDesktop.MouseEnter += (s, e) => picDesktop.Focus();
     }
     #endregion
 
@@ -49,6 +53,12 @@ public partial class FormClient : Form
         if (!int.TryParse(txtPort.Text, out int port))
         {
             MessageBox.Show("Invalid port number.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        if (!int.TryParse(txtPassword.Text.Trim(), out targetPIN))
+        {
+            MessageBox.Show("Please enter PIN!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
@@ -149,6 +159,19 @@ public partial class FormClient : Form
         });
     }
 
+    private void PicDesktop_MouseWheel(object? sender, MouseEventArgs e)
+    {
+        SendCommand(new CommandPacket
+        {
+            Type = CommandType.MouseWheel,
+            X = 0,
+            Y = 0,
+            KeyCode = e.Delta, // e.Delta chứa lực mang giá trị 120 (cuộn lên) hoặc -120 (cuộn xuống)
+            ClientWidth = picDesktop.Width,
+            ClientHeight = picDesktop.Height
+        });
+    }
+
     private void PicDesktop_MouseDown(object? sender, MouseEventArgs e)
     {
         var cmdType = CommandType.MouseMove;
@@ -188,7 +211,38 @@ public partial class FormClient : Form
                 ClientWidth = picDesktop.Width,
                 ClientHeight = picDesktop.Height
             });
+    }
+
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    {
+        if (isConnected)
+        {
+            // Bắt thóp tất cả các "phím điều hướng giao diện" mà WinForms hay cướp:
+            // Phím Cách (Space), Tab, Enter, và 4 phím mũi tên
+            switch (keyData)
+            {
+                case Keys.Space:
+                case Keys.Tab:
+                case Keys.Enter:
+                case Keys.Up:
+                case Keys.Down:
+                case Keys.Left:
+                case Keys.Right:
+                    // Tự tay gửi phím sang máy Server
+                    SendCommand(new CommandPacket
+                    {
+                        Type = CommandType.KeyDown,
+                        X = 0,
+                        Y = 0,
+                        KeyCode = (int)keyData
+                    });
+
+                    return true; // Trả về TRUE = Ra lệnh cho WinForms: "Tôi nuốt phím này rồi, cấm kích hoạt nút đang Highlight!"
+            }
         }
+
+        return base.ProcessCmdKey(ref msg, keyData);
+    }
 
     private void FormClient_KeyDown(object? sender, KeyEventArgs e)
     {
@@ -204,6 +258,20 @@ public partial class FormClient : Form
     #region 5. Network Communication & Data Processing
     private void SendCommand(CommandPacket packet)
     {
+        if (settingInput == 1)
+        {
+            // Nếu là lệnh điều khiển ngoại vi (chuột/phím) thì từ chối gửi đi
+            if (packet.Type == CommandType.MouseMove ||
+                packet.Type == CommandType.LeftMouseDown ||
+                packet.Type == CommandType.LeftMouseUp ||
+                packet.Type == CommandType.RightMouseDown ||
+                packet.Type == CommandType.RightMouseUp ||
+                packet.Type == CommandType.KeyDown ||
+                packet.Type == CommandType.KeyUp)
+            {
+                return; // Chặn lập tức
+            }
+        }
         if (isConnected && clientSocket != null && clientSocket.Connected)
         {
             try
@@ -213,7 +281,7 @@ public partial class FormClient : Form
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Lỗi gửi lệnh: {ex.Message}");
+                Debug.WriteLine($"Error command: {ex.Message}");
             }
         }
     }
@@ -229,28 +297,11 @@ public partial class FormClient : Form
                 latencyStopwatch.Stop();
                 isConnected = true;
 
-                UpdateUI(() =>
-                {
-                    btnConnect.Enabled = false;
-                    btnDisconnect.Enabled = true;
-                    txtServerIP.Enabled = false;
-                    txtPort.Enabled = false;
-                    txtPassword.Enabled = false;
-                    lblConnectionStatusValue.Text = "Connected (Pure Socket)";
-                    lblConnectionStatusValue.ForeColor = Color.Green;
-                    lblServerInfoValue.Text = $"{txtServerIP.Text}:{txtPort.Text}";
-                    lblLatency.Text = $"Latency: {latencyStopwatch.ElapsedMilliseconds} ms";
-                });
-
-                screenReceiver = new ScreenReceiver();
-                screenReceiver.OnImageReceived += UpdateDesktopImage;
-
-                int assignedUdpPort = screenReceiver.StartListening(5001);
-
+                // KẾT NỐI XONG -> CHƯA BẬT UDP VỘI -> GỬI GÓI TIN MÃ PIN TRƯỚC
                 SendCommand(new CommandPacket
                 {
-                    Type = CommandType.RegisterUdpPort,
-                    X = assignedUdpPort,
+                    Type = CommandType.Login,
+                    X = targetPIN,
                     Y = 0,
                     KeyCode = 0,
                     ClientWidth = 0,
@@ -263,53 +314,62 @@ public partial class FormClient : Form
         }
         catch (Exception ex)
         {
-            UpdateUI(() =>
-            {
-                MessageBox.Show($"Connection error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            });
+            UpdateUI(() => MessageBox.Show($"Connection error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error));
         }
     }
 
     private void ReceiveCallback(IAsyncResult ar)
     {
         if (!isConnected) return;
-
         try
         {
             ClientStateObject state = (ClientStateObject)ar.AsyncState;
             Socket socket = state.WorkSocket;
-
             int bytesRead = socket.EndReceive(ar);
 
             if (bytesRead > 0)
             {
-                // Nếu sau này Server có gửi lệnh TCP ngược lại Client (vd: chat văn bản), 
-                // ta sẽ giải mã state.Buffer ở đây.
-                // Hiện tại Client chỉ gửi chứ không nhận lệnh, nên ta chỉ xóa giỏ và nghe tiếp.
+                CommandPacket reply = CommandPacket.FromBytes(state.Buffer, bytesRead);
+
+                // XỬ LÝ PHẢN HỒI TỪ SERVER
+                if (reply.Type == CommandType.LoginResult)
+                {
+                    if (reply.X == 1) // PIN ĐÚNG
+                    {
+                        UpdateUI(() =>
+                        {
+                            btnConnect.Enabled = false;
+                            btnDisconnect.Enabled = true;
+                            txtServerIP.Enabled = false;
+                            txtPort.Enabled = false;
+                            txtPassword.Enabled = false;
+                            lblConnectionStatusValue.Text = "Connected & Authenticated";
+                            lblConnectionStatusValue.ForeColor = Color.Green;
+                            lblServerInfoValue.Text = $"{txtServerIP.Text}:{txtPort.Text}";
+                            lblLatency.Text = $"Latency: {latencyStopwatch.ElapsedMilliseconds} ms";
+                        });
+
+                        // PIN đúng rồi mới bắt đầu bật màn hình UDP
+                        screenReceiver = new ScreenReceiver();
+                        screenReceiver.OnImageReceived += UpdateDesktopImage;
+                        int assignedUdpPort = screenReceiver.StartListening(0);
+
+                        SendCommand(new CommandPacket { Type = CommandType.RegisterUdpPort, X = assignedUdpPort, Y = 0, KeyCode = 0, ClientWidth = 0, ClientHeight = 0 });
+                    }
+                    else // PIN SAI
+                    {
+                        UpdateUI(() => MessageBox.Show("PIN is incorect! Rejected.", "Rejected", MessageBoxButtons.OK, MessageBoxIcon.Stop));
+                        DisconnectFromServer();
+                        return;
+                    }
+                }
 
                 Array.Clear(state.Buffer, 0, bytesRead);
                 socket.BeginReceive(state.Buffer, 0, ClientStateObject.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
             }
-            else
-            {
-                // Nếu số byte nhận được = 0, nghĩa là Server đã chủ động bấm nút Stop
-                DisconnectFromServer();
-            }
+            else { DisconnectFromServer(); }
         }
-        catch (SocketException)
-        {
-            // Lỗi rớt mạng hoặc Server bị crash đột ngột
-            DisconnectFromServer();
-        }
-        catch (ObjectDisposedException) { /* Bỏ qua nếu Client vừa bấm Disconnect xong */ }
-        catch (Exception ex)
-        {
-            UpdateUI(() =>
-            {
-                MessageBox.Show($"Error receiving data: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            });
-            DisconnectFromServer();
-        }
+        catch { DisconnectFromServer(); }
     }
 
     private void DisconnectFromServer()

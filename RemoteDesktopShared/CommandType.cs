@@ -17,6 +17,9 @@ namespace RemoteDesktopShared
         KeyUp,
         RegisterUdpPort,
         ChangeQuality,       
-        ChangeCompression 
+        ChangeCompression,
+        MouseWheel,
+        Login,
+        LoginResult
     }
 }
