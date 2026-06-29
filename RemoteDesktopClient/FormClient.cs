@@ -147,15 +147,16 @@ public partial class FormClient : Form
     #region 4. Input Capturing (Mouse & Keyboard)
     private void PicDesktop_MouseMove(object? sender, MouseEventArgs e)
     {
-        //SendCommand(new CommandPacket { Type = CommandType.MouseMove, X = e.X, Y = e.Y, KeyCode = 0 });
+        var map = MapCoordinates(e.X, e.Y);
+
         SendCommand(new CommandPacket
         {
             Type = CommandType.MouseMove,
-            X = e.X,
-            Y = e.Y,
+            X = map.X,
+            Y = map.Y,
             KeyCode = 0,
-            ClientWidth = picDesktop.Width,   // Gửi kèm chiều rộng
-            ClientHeight = picDesktop.Height  // Gửi kèm chiều cao
+            ClientWidth = map.Width,   // Chiều rộng thực của ảnh đã zoom
+            ClientHeight = map.Height  // Chiều cao thực của ảnh đã zoom
         });
     }
 
@@ -175,20 +176,20 @@ public partial class FormClient : Form
     private void PicDesktop_MouseDown(object? sender, MouseEventArgs e)
     {
         var cmdType = CommandType.MouseMove;
-
         if (e.Button == MouseButtons.Left) cmdType = CommandType.LeftMouseDown;
         else if (e.Button == MouseButtons.Right) cmdType = CommandType.RightMouseDown;
 
         if (cmdType != CommandType.MouseMove)
         {
+            var map = MapCoordinates(e.X, e.Y);
             SendCommand(new CommandPacket
             {
                 Type = cmdType,
-                X = e.X,
-                Y = e.Y,
+                X = map.X,
+                Y = map.Y,
                 KeyCode = 0,
-                ClientWidth = picDesktop.Width,
-                ClientHeight = picDesktop.Height
+                ClientWidth = map.Width,
+                ClientHeight = map.Height
             });
         }
     }
@@ -196,21 +197,22 @@ public partial class FormClient : Form
     private void PicDesktop_MouseUp(object? sender, MouseEventArgs e)
     {
         var cmdType = CommandType.MouseMove;
-
         if (e.Button == MouseButtons.Left) cmdType = CommandType.LeftMouseUp;
         else if (e.Button == MouseButtons.Right) cmdType = CommandType.RightMouseUp;
 
         if (cmdType != CommandType.MouseMove)
-
+        {
+            var map = MapCoordinates(e.X, e.Y);
             SendCommand(new CommandPacket
             {
                 Type = cmdType,
-                X = e.X,
-                Y = e.Y,
+                X = map.X,
+                Y = map.Y,
                 KeyCode = 0,
-                ClientWidth = picDesktop.Width,
-                ClientHeight = picDesktop.Height
+                ClientWidth = map.Width,
+                ClientHeight = map.Height
             });
+        }
     }
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -252,6 +254,59 @@ public partial class FormClient : Form
     private void FormClient_KeyUp(object? sender, KeyEventArgs e)
     {
         SendCommand(new CommandPacket { Type = CommandType.KeyUp, X = 0, Y = 0, KeyCode = (int)e.KeyCode });
+    }
+
+    private (int X, int Y, int Width, int Height) MapCoordinates(int rawX, int rawY)
+    {
+        int boxW = picDesktop.Width;
+        int boxH = picDesktop.Height;
+
+        // Nếu chưa có ảnh hoặc đang để Stretch thì tọa độ thô là chuẩn nhất
+        if (picDesktop.Image == null || picDesktop.SizeMode == PictureBoxSizeMode.StretchImage)
+        {
+            return (rawX, rawY, boxW, boxH);
+        }
+
+        int imgW = picDesktop.Image.Width;
+        int imgH = picDesktop.Image.Height;
+
+        int drawnW = imgW;
+        int drawnH = imgH;
+        int offsetX = 0;
+        int offsetY = 0;
+
+        switch (picDesktop.SizeMode)
+        {
+            case PictureBoxSizeMode.Normal:
+                drawnW = imgW;
+                drawnH = imgH;
+                break;
+
+            case PictureBoxSizeMode.CenterImage:
+                offsetX = (boxW - imgW) / 2;
+                offsetY = (boxH - imgH) / 2;
+                drawnW = imgW;
+                drawnH = imgH;
+                break;
+
+            case PictureBoxSizeMode.Zoom:
+                float scale = Math.Min((float)boxW / imgW, (float)boxH / imgH);
+                drawnW = (int)(imgW * scale);
+                drawnH = (int)(imgH * scale);
+                offsetX = (boxW - drawnW) / 2;
+                offsetY = (boxH - drawnH) / 2;
+                break;
+        }
+
+        int mappedX = rawX - offsetX;
+        int mappedY = rawY - offsetY;
+
+        // Kẹp (Clamp) tọa độ lại: Nếu người dùng click vào dải đen bên ngoài,
+        // tự động neo chuột về sát mép ảnh chứ không cho ra tọa độ âm làm văng chuột
+        mappedX = Math.Clamp(mappedX, 0, drawnW);
+        mappedY = Math.Clamp(mappedY, 0, drawnH);
+
+        return (mappedX, mappedY, drawnW, drawnH);
     }
     #endregion
 
