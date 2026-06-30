@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Net.Sockets;
 
-namespace RemoteDesktopClient;
+namespace RemoteDesktop;
 
 public partial class FormClient : Form
 {

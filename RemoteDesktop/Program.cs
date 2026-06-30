@@ -1,4 +1,4 @@
-namespace RemoteDesktopClient;
+namespace RemoteDesktop;
 
 static class Program
 {

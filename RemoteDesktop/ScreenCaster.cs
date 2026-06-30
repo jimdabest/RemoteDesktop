@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Security.Cryptography;
 
-namespace RemoteDesktopClient
+namespace RemoteDesktop
 {
     public class ScreenCaster
     {

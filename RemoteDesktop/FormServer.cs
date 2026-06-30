@@ -11,7 +11,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Runtime.InteropServices;
 
-namespace RemoteDesktopClient
+namespace RemoteDesktop
 {
     public partial class FormServer : Form
     {

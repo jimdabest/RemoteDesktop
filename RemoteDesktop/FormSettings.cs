@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace RemoteDesktopClient
+namespace RemoteDesktop
 {
     public partial class FormSettings : Form
     {
