@@ -14,7 +14,7 @@ Ham giai ma du lieu
 using System;
 using System.IO; // (MemoryStream, BinaryWriter, BinaryReader)
 
-namespace RemoteDesktopShared
+namespace RemoteDesktopClient
 {
     public class CommandPacket
     {

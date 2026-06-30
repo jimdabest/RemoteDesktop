@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Net.Sockets;
-using RemoteDesktopShared;
 
 namespace RemoteDesktopClient;
 
@@ -18,6 +17,7 @@ public partial class FormClient : Form
     private int settingCompression = 0; // 0: Low, 1: Med, 2: High
     private int settingInput = 0;       // 0: Full Control, 1: View Only
     private PictureBoxSizeMode settingDisplay = PictureBoxSizeMode.StretchImage;
+    private Rectangle _normalBounds;
     #endregion
 
     #region 2. Constructor & Initialization
@@ -96,11 +96,13 @@ public partial class FormClient : Form
             // Exit fullscreen
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.WindowState = FormWindowState.Normal;
+            this.Bounds = _normalBounds;
             this.MaximizeBox = false;
         }
         else
         {
             // Enter fullscreen
+            _normalBounds = this.Bounds;
             this.FormBorderStyle = FormBorderStyle.None;
             this.WindowState = FormWindowState.Maximized;
         }

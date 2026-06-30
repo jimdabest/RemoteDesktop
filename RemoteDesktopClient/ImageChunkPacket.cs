@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace RemoteDesktopShared
+namespace RemoteDesktopClient
 {
     public class ImageChunkPacket
     {

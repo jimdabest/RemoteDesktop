@@ -8,9 +8,8 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Security.Cryptography;
-using RemoteDesktopShared;
 
-namespace RemoteDesktopServer
+namespace RemoteDesktopClient
 {
     public class ScreenCaster
     {

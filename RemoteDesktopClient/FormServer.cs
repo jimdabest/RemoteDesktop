@@ -10,9 +10,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Runtime.InteropServices;
-using RemoteDesktopShared;
 
-namespace RemoteDesktopServer
+namespace RemoteDesktopClient
 {
     public partial class FormServer : Form
     {

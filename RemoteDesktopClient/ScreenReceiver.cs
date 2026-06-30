@@ -4,7 +4,6 @@ using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using RemoteDesktopShared;
 
 namespace RemoteDesktopClient
 {
