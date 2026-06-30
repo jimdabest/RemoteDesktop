@@ -97,7 +97,8 @@ namespace RemoteDesktopClient
                 lblStatusValue.Text = "Online";
                 lblStatusValue.ForeColor = Color.Green;
 
-                AppendLog($"[{DateTime.Now:HH:mm:ss}] Server started on port {port}");
+                string localIP = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList.FirstOrDefault(ip => ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)?.ToString() ?? "127.0.0.1";
+                AppendLog($"[{DateTime.Now:HH:mm:ss}] Server started on {localIP}:{port}");
 
                 serverSocket.BeginAccept(new AsyncCallback(AcceptCallback), null);
             }

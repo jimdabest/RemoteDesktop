@@ -65,7 +65,7 @@ partial class FormClient
         panelHeader.Dock = DockStyle.Top;
         panelHeader.Location = new Point(0, 0);
         panelHeader.Name = "panelHeader";
-        panelHeader.Size = new Size(1200, 60);
+        panelHeader.Size = new Size(843, 60);
         panelHeader.TabIndex = 0;
         // 
         // lblTitle
@@ -93,7 +93,7 @@ partial class FormClient
         panelConnection.Dock = DockStyle.Top;
         panelConnection.Location = new Point(0, 60);
         panelConnection.Name = "panelConnection";
-        panelConnection.Size = new Size(1200, 110);
+        panelConnection.Size = new Size(843, 110);
         panelConnection.TabIndex = 1;
         // 
         // btnDisconnect
@@ -190,7 +190,7 @@ partial class FormClient
         panelStatus.Dock = DockStyle.Top;
         panelStatus.Location = new Point(0, 170);
         panelStatus.Name = "panelStatus";
-        panelStatus.Size = new Size(1200, 50);
+        panelStatus.Size = new Size(843, 50);
         panelStatus.TabIndex = 2;
         // 
         // lblConnectionStatusValue
@@ -198,7 +198,7 @@ partial class FormClient
         lblConnectionStatusValue.AutoSize = true;
         lblConnectionStatusValue.Font = new Font("Arial", 10F, FontStyle.Bold);
         lblConnectionStatusValue.ForeColor = Color.Red;
-        lblConnectionStatusValue.Location = new Point(150, 15);
+        lblConnectionStatusValue.Location = new Point(173, 15);
         lblConnectionStatusValue.Name = "lblConnectionStatusValue";
         lblConnectionStatusValue.Size = new Size(116, 19);
         lblConnectionStatusValue.TabIndex = 3;
@@ -241,7 +241,7 @@ partial class FormClient
         panelDesktop.Dock = DockStyle.Fill;
         panelDesktop.Location = new Point(0, 220);
         panelDesktop.Name = "panelDesktop";
-        panelDesktop.Size = new Size(1200, 430);
+        panelDesktop.Size = new Size(843, 430);
         panelDesktop.TabIndex = 3;
         // 
         // picDesktop
@@ -250,7 +250,7 @@ partial class FormClient
         picDesktop.Dock = DockStyle.Fill;
         picDesktop.Location = new Point(0, 0);
         picDesktop.Name = "picDesktop";
-        picDesktop.Size = new Size(1200, 430);
+        picDesktop.Size = new Size(843, 430);
         picDesktop.TabIndex = 0;
         picDesktop.TabStop = false;
         // 
@@ -263,14 +263,14 @@ partial class FormClient
         panelControls.Dock = DockStyle.Bottom;
         panelControls.Location = new Point(0, 650);
         panelControls.Name = "panelControls";
-        panelControls.Size = new Size(1200, 50);
+        panelControls.Size = new Size(843, 50);
         panelControls.TabIndex = 4;
         // 
         // lblLatency
         // 
         lblLatency.AutoSize = true;
         lblLatency.Font = new Font("Arial", 10F);
-        lblLatency.Location = new Point(1000, 17);
+        lblLatency.Location = new Point(284, 17);
         lblLatency.Name = "lblLatency";
         lblLatency.Size = new Size(115, 19);
         lblLatency.TabIndex = 3;
@@ -278,9 +278,9 @@ partial class FormClient
         // 
         // btnFullscreen
         // 
-        btnFullscreen.Location = new Point(100, 12);
+        btnFullscreen.Location = new Point(36, 11);
         btnFullscreen.Name = "btnFullscreen";
-        btnFullscreen.Size = new Size(80, 30);
+        btnFullscreen.Size = new Size(84, 30);
         btnFullscreen.TabIndex = 2;
         btnFullscreen.Text = "Fullscreen";
         btnFullscreen.UseVisualStyleBackColor = true;
@@ -288,7 +288,7 @@ partial class FormClient
         // 
         // btnSettings
         // 
-        btnSettings.Location = new Point(190, 12);
+        btnSettings.Location = new Point(140, 11);
         btnSettings.Name = "btnSettings";
         btnSettings.Size = new Size(80, 30);
         btnSettings.TabIndex = 1;
@@ -300,7 +300,7 @@ partial class FormClient
         // 
         AutoScaleDimensions = new SizeF(8F, 17F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(1200, 700);
+        ClientSize = new Size(843, 700);
         Controls.Add(panelDesktop);
         Controls.Add(panelStatus);
         Controls.Add(panelConnection);

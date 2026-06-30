@@ -282,8 +282,8 @@
             // 
             // txtLogs
             // 
-            this.txtLogs.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.txtLogs.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtLogs.BackColor = System.Drawing.Color.Black;
             this.txtLogs.Font = new System.Drawing.Font("Courier New", 9F);
@@ -371,4 +371,3 @@
         private System.Windows.Forms.TextBox txtServerPIN;
     }
 }
-
